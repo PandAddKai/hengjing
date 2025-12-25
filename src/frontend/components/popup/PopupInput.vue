@@ -121,7 +121,8 @@ const message = useMessage()
 const hasOptions = computed(() => (props.request?.predefined_options?.length ?? 0) > 0)
 const canSubmit = computed(() => {
   const hasOptionsSelected = selectedOptions.value.length > 0
-  const hasInputText = userInput.value.trim().length > 0
+  // 直接从 textarea 读取值判断
+  const hasInputText = getCurrentInputValue().trim().length > 0
   const hasImages = uploadedImages.value.length > 0
 
   if (hasOptions.value) {
@@ -135,7 +136,7 @@ const statusText = computed(() => {
   // 检查是否有任何输入内容
   const hasInput = selectedOptions.value.length > 0
     || uploadedImages.value.length > 0
-    || userInput.value.trim().length > 0
+    || getCurrentInputValue().trim().length > 0
 
   // 如果有任何输入内容，返回空字符串让 PopupActions 显示快捷键
   if (hasInput) {
@@ -147,11 +148,14 @@ const statusText = computed(() => {
 
 // 发送更新事件（带防抖，避免大文本输入时频繁触发）
 const debouncedEmitUpdate = useDebounceFn(() => {
+  // 从 textarea 直接读取值，避免响应式更新
+  const currentInput = getCurrentInputValue()
+  
   // 获取条件性prompt的追加内容
   const conditionalContent = generateConditionalContent()
 
   // 将条件性内容追加到用户输入
-  const finalUserInput = userInput.value + conditionalContent
+  const finalUserInput = currentInput + conditionalContent
 
   emit('update', {
     userInput: finalUserInput,
@@ -162,11 +166,14 @@ const debouncedEmitUpdate = useDebounceFn(() => {
 
 // 立即发送更新事件（用于选项变化等需要即时响应的场景）
 function emitUpdateImmediate() {
+  // 从 textarea 直接读取值
+  const currentInput = getCurrentInputValue()
+  
   // 获取条件性prompt的追加内容
   const conditionalContent = generateConditionalContent()
 
   // 将条件性内容追加到用户输入
-  const finalUserInput = userInput.value + conditionalContent
+  const finalUserInput = currentInput + conditionalContent
 
   emit('update', {
     userInput: finalUserInput,
@@ -530,24 +537,57 @@ async function savePromptOrder() {
 //   emitUpdate()
 // })
 
-// 处理原生 textarea 输入
-function handleTextInput(event: Event) {
-  const target = event.target as HTMLTextAreaElement
-  userInput.value = target.value
-  debouncedEmitUpdate()
-  // 自动调整高度
-  autoResizeTextarea(target)
+// 输入法组合状态
+const isComposing = ref(false)
+
+// 获取当前输入框的实际值
+function getCurrentInputValue(): string {
+  if (textareaRef.value) {
+    return (textareaRef.value as HTMLTextAreaElement).value
+  }
+  return userInput.value
 }
 
-// 自动调整 textarea 高度
+// 处理原生 textarea 输入
+function handleTextInput(event: Event) {
+  // 输入法组合期间不更新
+  if (isComposing.value) return
+  
+  // 不立即更新 userInput，只触发防抖的 emitUpdate
+  debouncedEmitUpdate()
+}
+
+// 输入法开始组合
+function handleCompositionStart() {
+  isComposing.value = true
+}
+
+// 输入法结束组合
+function handleCompositionEnd(event: Event) {
+  isComposing.value = false
+  debouncedEmitUpdate()
+}
+
+// 自动调整 textarea 高度（暂时禁用）
 function autoResizeTextarea(textarea: HTMLTextAreaElement) {
-  // 重置高度以获取正确的 scrollHeight
-  textarea.style.height = 'auto'
   // 设置最小和最大高度 (3-15 行，每行约 24px)
   const minHeight = 72 // 3 行
   const maxHeight = 360 // 15 行
-  const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight)
-  textarea.style.height = `${newHeight}px`
+  
+  // 使用 requestAnimationFrame 避免滚动跳动
+  requestAnimationFrame(() => {
+    // 临时设置 overflow 为 hidden 防止滚动
+    const originalOverflow = textarea.style.overflow
+    textarea.style.overflow = 'hidden'
+    
+    // 重置高度以获取正确的 scrollHeight
+    textarea.style.height = `${minHeight}px`
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight)
+    textarea.style.height = `${newHeight}px`
+    
+    // 恢复 overflow
+    textarea.style.overflow = originalOverflow || 'auto'
+  })
 }
 
 // 移除拖拽相关的监听器
@@ -811,13 +851,15 @@ defineExpose({
       <!-- 文本输入框 - 使用原生 textarea 提升大文本性能 -->
       <textarea
         ref="textareaRef"
-        v-model="userInput"
+        :value="userInput"
         class="popup-textarea"
         :placeholder="hasOptions ? `您可以在这里添加补充说明... (支持粘贴图片 ${pasteShortcut})` : `请输入您的回复... (支持粘贴图片 ${pasteShortcut})`"
         :disabled="submitting"
         data-guide="popup-input"
         @paste="handleImagePaste"
         @input="handleTextInput"
+        @compositionstart="handleCompositionStart"
+        @compositionend="handleCompositionEnd"
       />
     </div>
 
@@ -873,13 +915,12 @@ defineExpose({
 /* 原生 textarea 样式 - 适配主题 */
 .popup-textarea {
   width: 100%;
-  min-height: 72px; /* 3 行 */
-  max-height: 360px; /* 15 行 */
+  height: 150px; /* 固定高度，约 6-7 行 */
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   line-height: 1.5;
   border-radius: 0.5rem;
-  resize: none;
+  resize: vertical; /* 允许用户手动调整高度 */
   overflow-y: auto;
   transition: border-color 0.2s, box-shadow 0.2s;
   background-color: var(--color-surface-100, #f0f0f0);
