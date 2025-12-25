@@ -6,6 +6,7 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { useMessage } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { useKeyboard } from '../../composables/useKeyboard'
 
 interface Props {
@@ -144,8 +145,23 @@ const statusText = computed(() => {
   return '等待输入...'
 })
 
-// 发送更新事件
-function emitUpdate() {
+// 发送更新事件（带防抖，避免大文本输入时频繁触发）
+const debouncedEmitUpdate = useDebounceFn(() => {
+  // 获取条件性prompt的追加内容
+  const conditionalContent = generateConditionalContent()
+
+  // 将条件性内容追加到用户输入
+  const finalUserInput = userInput.value + conditionalContent
+
+  emit('update', {
+    userInput: finalUserInput,
+    selectedOptions: selectedOptions.value,
+    draggedImages: uploadedImages.value,
+  })
+}, 100) // 100ms 防抖
+
+// 立即发送更新事件（用于选项变化等需要即时响应的场景）
+function emitUpdateImmediate() {
   // 获取条件性prompt的追加内容
   const conditionalContent = generateConditionalContent()
 
@@ -159,6 +175,11 @@ function emitUpdate() {
   })
 }
 
+// 发送更新事件
+function emitUpdate() {
+  debouncedEmitUpdate()
+}
+
 // 处理选项变化
 function handleOptionChange(option: string, checked: boolean) {
   if (checked) {
@@ -169,7 +190,7 @@ function handleOptionChange(option: string, checked: boolean) {
     if (idx > -1)
       selectedOptions.value.splice(idx, 1)
   }
-  emitUpdate()
+  emitUpdateImmediate() // 选项变化需要即时响应
 }
 
 // 处理选项切换（整行点击）
@@ -181,7 +202,7 @@ function handleOptionToggle(option: string) {
   else {
     selectedOptions.value.push(option)
   }
-  emitUpdate()
+  emitUpdateImmediate() // 选项变化需要即时响应
 }
 
 // 移除了所有拖拽和上传组件相关的代码
@@ -258,7 +279,7 @@ function fileToBase64(file: File): Promise<string> {
 function removeImage(index: number) {
   uploadedImages.value.splice(index, 1)
   emit('imageRemove', index)
-  emitUpdate()
+  emitUpdateImmediate() // 图片变化需要即时响应
 }
 
 // 移除自定义图片预览功能，改用 Naive UI 的内置预览
@@ -356,7 +377,7 @@ function insertPromptContent(content: string, mode: 'replace' | 'append' = 'repl
     }
   }, 100)
 
-  emitUpdate()
+  emitUpdateImmediate() // prompt插入需要即时响应
 }
 
 // 处理插入模式选择
@@ -775,7 +796,7 @@ defineExpose({
         size="small"
         :placeholder="hasOptions ? `您可以在这里添加补充说明... (支持粘贴图片 ${pasteShortcut})` : `请输入您的回复... (支持粘贴图片 ${pasteShortcut})`"
         :disabled="submitting"
-        :autosize="{ minRows: 3, maxRows: 6 }"
+        :autosize="{ minRows: 3, maxRows: 15 }"
         data-guide="popup-input"
         @paste="handleImagePaste"
       />
