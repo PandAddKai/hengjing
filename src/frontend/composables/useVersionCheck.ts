@@ -26,7 +26,7 @@ interface UpdateProgress {
 }
 
 // 持久化存储的键名
-const CANCELLED_VERSIONS_KEY = 'cunzhi_cancelled_versions'
+const CANCELLED_VERSIONS_KEY = 'continuum_cancelled_versions'
 
 // 加载已取消的版本
 function loadCancelledVersions(): Set<string> {
@@ -111,7 +111,7 @@ async function checkLatestVersion(): Promise<VersionInfo | null> {
   try {
     isChecking.value = true
 
-    const response = await fetch('https://api.github.com/repos/imhuso/cunzhi/releases/latest', {
+    const response = await fetch('https://api.github.com/repos/imhuso/continuum/releases/latest', {
       headers: {
         Accept: 'application/vnd.github.v3+json',
       },
@@ -235,7 +235,7 @@ async function safeOpenUrl(url: string): Promise<void> {
 
 // 打开下载页面
 async function openDownloadPage(): Promise<void> {
-  await safeOpenUrl('https://github.com/imhuso/cunzhi/releases/latest')
+  await safeOpenUrl('https://github.com/imhuso/continuum/releases/latest')
 }
 
 // 打开发布页面

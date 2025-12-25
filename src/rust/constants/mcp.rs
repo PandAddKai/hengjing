@@ -1,7 +1,7 @@
 // MCP 工具相关常量
 
-/// 寸止工具标识符
-pub const TOOL_ZHI: &str = "zhi";
+/// 恒境工具标识符
+pub const TOOL_HENG: &str = "heng";
 
 /// 记忆管理工具标识符
 pub const TOOL_JI: &str = "ji";
@@ -10,7 +10,7 @@ pub const TOOL_JI: &str = "ji";
 pub const TOOL_SOU: &str = "sou";
 
 /// 默认启用的工具列表
-pub const DEFAULT_ENABLED_TOOLS: &[&str] = &[TOOL_ZHI, TOOL_JI, TOOL_SOU];
+pub const DEFAULT_ENABLED_TOOLS: &[&str] = &[TOOL_HENG, TOOL_JI, TOOL_SOU];
 
 /// 继续回复默认启用状态
 pub const DEFAULT_CONTINUE_REPLY_ENABLED: bool = true;
@@ -60,7 +60,7 @@ impl Default for McpConfig {
     fn default() -> Self {
         Self {
             tools: vec![
-                McpToolConfig::new(TOOL_ZHI, true, false), // 寸止工具不可禁用
+                McpToolConfig::new(TOOL_HENG, true, false), // 恒境工具不可禁用
                 McpToolConfig::new(TOOL_JI, false, true),   // 记忆管理工具可禁用，默认关闭
                 McpToolConfig::new(TOOL_SOU, false, true), // 代码搜索工具可禁用，默认关闭
             ],
@@ -124,5 +124,5 @@ pub fn get_default_mcp_config() -> McpConfig {
 
 /// 检查是否为有效的工具 ID
 pub fn is_valid_tool_id(tool_id: &str) -> bool {
-    matches!(tool_id, TOOL_ZHI | TOOL_JI | TOOL_SOU)
+    matches!(tool_id, TOOL_HENG | TOOL_JI | TOOL_SOU)
 }

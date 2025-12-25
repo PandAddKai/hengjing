@@ -1,5 +1,5 @@
 // MCP 服务器入口点
-use cunzhi::{mcp::run_server, utils::auto_init_logger, log_important};
+use continuum::{mcp::run_server, utils::auto_init_logger, log_important};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

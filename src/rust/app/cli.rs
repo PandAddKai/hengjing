@@ -70,7 +70,7 @@ fn handle_mcp_request(request_file: &str) -> Result<()> {
 
 /// 显示帮助信息
 fn print_help() {
-    println!("寸止 - 智能代码审查工具");
+    println!("恒境 - 智能代码审查工具");
     println!();
     println!("用法:");
     println!("  等一下                    启动设置界面");
@@ -81,5 +81,5 @@ fn print_help() {
 
 /// 显示版本信息
 fn print_version() {
-    println!("寸止 v{}", env!("CARGO_PKG_VERSION"));
+    println!("恒境 v{}", env!("CARGO_PKG_VERSION"));
 }

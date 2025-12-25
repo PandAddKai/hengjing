@@ -122,7 +122,7 @@ pub fn auto_init_logger() -> Result<(), Box<dyn std::error::Error>> {
         let log_file_path = env::var("MCP_LOG_FILE")
             .unwrap_or_else(|_| {
                 let temp_dir = env::temp_dir();
-                temp_dir.join("cunzhi-mcp.log").to_string_lossy().to_string()
+                temp_dir.join("continuum-mcp.log").to_string_lossy().to_string()
             });
             
         LogConfig {

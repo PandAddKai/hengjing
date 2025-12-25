@@ -323,7 +323,7 @@ onMounted(async () => {
           }"
         >
           <div class="mb-3 font-medium text-lg">
-            寸止 - AI 对话持续工具
+            恒境 - AI 对话持续工具
           </div>
           <div class="mb-3 opacity-80">
             The quick brown fox jumps over the lazy dog.

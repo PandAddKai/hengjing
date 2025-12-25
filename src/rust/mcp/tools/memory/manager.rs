@@ -16,7 +16,7 @@ impl MemoryManager {
     pub fn new(project_path: &str) -> Result<Self> {
         // 规范化项目路径
         let normalized_path = Self::normalize_project_path(project_path)?;
-        let memory_dir = normalized_path.join(".cunzhi-memory");
+        let memory_dir = normalized_path.join(".continuum-memory");
 
         // 创建记忆目录，如果失败则说明项目不适合使用记忆功能
         fs::create_dir_all(&memory_dir)

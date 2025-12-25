@@ -27,24 +27,24 @@ pub async fn get_mcp_tools_config(state: State<'_, AppState>) -> Result<Vec<MCPT
     // 动态构建工具配置列表
     let mut tools = Vec::new();
     
-    // 寸止工具 - 始终存在，无配置选项
+    // 恒境工具 - 始终存在，无配置选项
     tools.push(MCPToolConfig {
-        id: mcp::TOOL_ZHI.to_string(),
-        name: "寸止".to_string(),
-        description: "智能代码审查交互工具，支持预定义选项、自由文本输入和图片上传".to_string(),
-        enabled: config.mcp_config.tools.get(mcp::TOOL_ZHI).copied().unwrap_or(true),
-        can_disable: false, // 寸止工具是必需的
+        id: mcp::TOOL_HENG.to_string(),
+        name: "恒境".to_string(),
+        description: "智能代码审查交互工具（工具名：heng），支持预定义选项、自由文本输入和图片上传".to_string(),
+        enabled: config.mcp_config.tools.get(mcp::TOOL_HENG).copied().unwrap_or(true),
+        can_disable: false, // 恒境工具是必需的
         icon: "i-carbon-chat text-lg text-blue-600 dark:text-blue-400".to_string(),
         icon_bg: "bg-blue-100 dark:bg-blue-900".to_string(),
         dark_icon_bg: "dark:bg-blue-800".to_string(),
-        has_config: false, // 寸止工具没有配置选项
+        has_config: false, // 恒境工具没有配置选项
     });
     
     // 记忆管理工具 - 始终存在，无配置选项
     tools.push(MCPToolConfig {
         id: mcp::TOOL_JI.to_string(),
         name: "记忆管理".to_string(),
-        description: "全局记忆管理工具，用于存储和管理重要的开发规范、用户偏好和最佳实践".to_string(),
+        description: "全局记忆管理工具（工具名：ji），用于存储和管理重要的开发规范、用户偏好和最佳实践".to_string(),
         enabled: config.mcp_config.tools.get(mcp::TOOL_JI).copied().unwrap_or(false),
         can_disable: true,
         icon: "i-carbon-data-base text-lg text-purple-600 dark:text-purple-400".to_string(),
@@ -57,7 +57,7 @@ pub async fn get_mcp_tools_config(state: State<'_, AppState>) -> Result<Vec<MCPT
     tools.push(MCPToolConfig {
         id: mcp::TOOL_SOU.to_string(),
         name: "代码搜索".to_string(),
-        description: "基于查询在特定项目中搜索相关的代码上下文，支持语义搜索和增量索引".to_string(),
+        description: "基于查询在特定项目中搜索相关的代码上下文（工具名：sou），支持语义搜索和增量索引".to_string(),
         enabled: config.mcp_config.tools.get(mcp::TOOL_SOU).copied().unwrap_or(false),
         can_disable: true,
         icon: "i-carbon-search text-lg text-green-600 dark:text-green-400".to_string(),
@@ -84,8 +84,8 @@ pub async fn set_mcp_tool_enabled(
         let mut config = state.config.lock().map_err(|e| format!("获取配置失败: {}", e))?;
         
         // 检查工具是否可以禁用
-        if tool_id == mcp::TOOL_ZHI && !enabled {
-            return Err("寸止工具是必需的，无法禁用".to_string());
+        if tool_id == mcp::TOOL_HENG && !enabled {
+            return Err("恒境工具是必需的，无法禁用".to_string());
         }
         
         // 更新工具状态

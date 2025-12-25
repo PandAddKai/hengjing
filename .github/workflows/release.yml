@@ -113,23 +113,23 @@ jobs:
           # 复制二进制文件
           if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
             cp "$TARGET_DIR/等一下.exe" cli-package/
-            cp "$TARGET_DIR/寸止.exe" cli-package/
+            cp "$TARGET_DIR/恒境.exe" cli-package/
             cd cli-package
-            7z a ../cunzhi-cli-${TAG_NAME}-${{ matrix.name }}.zip *
+            7z a ../continuum-cli-${TAG_NAME}-${{ matrix.name }}.zip *
           else
             cp "$TARGET_DIR/等一下" cli-package/
-            cp "$TARGET_DIR/寸止" cli-package/
+            cp "$TARGET_DIR/恒境" cli-package/
             cd cli-package
-            tar -czf ../cunzhi-cli-${TAG_NAME}-${{ matrix.name }}.tar.gz *
+            tar -czf ../continuum-cli-${TAG_NAME}-${{ matrix.name }}.tar.gz *
           fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cunzhi-cli-${{ matrix.name }}
+          name: continuum-cli-${{ matrix.name }}
           path: |
-            cunzhi-cli-*.tar.gz
-            cunzhi-cli-*.zip
+            continuum-cli-*.tar.gz
+            continuum-cli-*.zip
           if-no-files-found: ignore
 
   release:
@@ -192,7 +192,7 @@ jobs:
         run: |
           # 从 GitHub API 获取最新的 release 版本
           echo "Fetching latest release from GitHub API..."
-          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/imhuso/cunzhi/releases/latest" | jq -r '.tag_name // empty' 2>/dev/null || echo "")
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/imhuso/continuum/releases/latest" | jq -r '.tag_name // empty' 2>/dev/null || echo "")
 
           if [ -z "$LATEST_RELEASE" ] || [ "$LATEST_RELEASE" = "null" ]; then
             echo "GitHub API failed or no previous release found, falling back to git tags"
@@ -220,7 +220,7 @@ jobs:
 
             # 添加 Full Changelog 链接
             echo "" >> changelog.md
-            echo "**Full Changelog**: [$PREVIOUS_TAG...${{ github.ref_name }}](https://github.com/imhuso/cunzhi/compare/$PREVIOUS_TAG...${{ github.ref_name }})" >> changelog.md
+            echo "**Full Changelog**: [$PREVIOUS_TAG...${{ github.ref_name }}](https://github.com/imhuso/continuum/compare/$PREVIOUS_TAG...${{ github.ref_name }})" >> changelog.md
           fi
 
           # 生成发布标题
@@ -249,8 +249,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/*/cunzhi-cli-*.tar.gz
-            artifacts/*/cunzhi-cli-*.zip
+            artifacts/*/continuum-cli-*.tar.gz
+            artifacts/*/continuum-cli-*.zip
           draft: false
           prerelease: false
           generate_release_notes: false

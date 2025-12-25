@@ -1,10 +1,10 @@
 // 应用程序相关常量
 
 /// 应用程序名称
-pub const NAME: &str = "寸止";
+pub const NAME: &str = "恒境";
 
 /// 应用程序英文名称
-pub const NAME_EN: &str = "cunzhi";
+pub const NAME_EN: &str = "continuum";
 
 /// 应用程序描述
 pub const DESCRIPTION: &str = "智能代码审查工具";
@@ -16,10 +16,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const AUTHOR: &str = "imhuso";
 
 /// 应用程序主页
-pub const HOMEPAGE: &str = "https://github.com/imhuso/cunzhi";
+pub const HOMEPAGE: &str = "https://github.com/imhuso/continuum";
 
 /// 应用程序仓库
-pub const REPOSITORY: &str = "https://github.com/imhuso/cunzhi";
+pub const REPOSITORY: &str = "https://github.com/imhuso/continuum";
 
 /// 应用程序许可证
 pub const LICENSE: &str = "MIT";
@@ -28,10 +28,10 @@ pub const LICENSE: &str = "MIT";
 pub const CONFIG_FILE_NAME: &str = "config.json";
 
 /// 日志文件名前缀
-pub const LOG_FILE_PREFIX: &str = "cunzhi";
+pub const LOG_FILE_PREFIX: &str = "continuum";
 
 /// 应用程序标识符（用于系统集成）
-pub const APP_IDENTIFIER: &str = "com.imhuso.cunzhi";
+pub const APP_IDENTIFIER: &str = "com.imhuso.continuum";
 
 /// 用户代理字符串
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));

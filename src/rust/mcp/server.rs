@@ -8,22 +8,22 @@ use rmcp::{
 use std::collections::HashMap;
 
 use super::tools::{InteractionTool, MemoryTool, AcemcpTool};
-use super::types::{ZhiRequest, JiyiRequest};
+use super::types::{HengRequest, JiyiRequest};
 use crate::config::load_standalone_config;
 use crate::{log_important, log_debug};
 
 #[derive(Clone)]
-pub struct ZhiServer {
+pub struct HengServer {
     enabled_tools: HashMap<String, bool>,
 }
 
-impl Default for ZhiServer {
+impl Default for HengServer {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ZhiServer {
+impl HengServer {
     pub fn new() -> Self {
         // 尝试加载配置，如果失败则使用默认配置
         let enabled_tools = match load_standalone_config() {
@@ -55,16 +55,16 @@ impl ZhiServer {
     }
 }
 
-impl ServerHandler for ZhiServer {
+impl ServerHandler for HengServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation {
-                name: "Zhi-mcp".to_string(),
+                name: "Heng-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             },
-            instructions: Some("Zhi 智能代码审查工具，支持交互式对话和记忆管理".to_string()),
+            instructions: Some("恒境智能代码审查工具，支持交互式对话和记忆管理".to_string()),
         }
     }
 
@@ -86,8 +86,8 @@ impl ServerHandler for ZhiServer {
 
         let mut tools = Vec::new();
 
-        // 寸止工具始终可用（必需工具）
-        let zhi_schema = serde_json::json!({
+        // 恒境工具始终可用（必需工具）
+        let heng_schema = serde_json::json!({
             "type": "object",
             "properties": {
                 "message": {
@@ -107,9 +107,9 @@ impl ServerHandler for ZhiServer {
             "required": ["message"]
         });
 
-        if let serde_json::Value::Object(schema_map) = zhi_schema {
+        if let serde_json::Value::Object(schema_map) = heng_schema {
             tools.push(Tool {
-                name: Cow::Borrowed("zhi"),
+                name: Cow::Borrowed("heng"),
                 description: Some(Cow::Borrowed("智能代码审查交互工具，支持预定义选项、自由文本输入和图片上传")),
                 input_schema: Arc::new(schema_map),
                 annotations: None,
@@ -172,17 +172,17 @@ impl ServerHandler for ZhiServer {
         log_debug!("收到工具调用请求: {}", request.name);
 
         match request.name.as_ref() {
-            "zhi" => {
+            "heng" => {
                 // 解析请求参数
                 let arguments_value = request.arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
-                let zhi_request: ZhiRequest = serde_json::from_value(arguments_value)
+                let heng_request: HengRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
-                // 调用寸止工具
-                InteractionTool::zhi(zhi_request).await
+                // 调用恒境工具
+                InteractionTool::heng(heng_request).await
             }
             "ji" => {
                 // 检查记忆管理工具是否启用
@@ -240,7 +240,7 @@ impl ServerHandler for ZhiServer {
 /// 启动MCP服务器
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     // 创建并运行服务器
-    let service = ZhiServer::new()
+    let service = HengServer::new()
         .serve(stdio())
         .await
         .inspect_err(|e| {

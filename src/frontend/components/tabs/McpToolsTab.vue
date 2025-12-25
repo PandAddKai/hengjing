@@ -397,7 +397,7 @@ watch(() => acemcpConfig.value.text_extensions, (list) => {
         <template #icon>
           <div class="i-carbon-connection-signal text-lg" />
         </template>
-        MCP工具配置已更改，请在您的MCP客户端中重新连接寸止服务以使更改生效。
+        MCP工具配置已更改，请在您的MCP客户端中重新连接恒境服务以使更改生效。
       </n-alert>
 
       <!-- 加载状态 -->
@@ -553,7 +553,7 @@ watch(() => acemcpConfig.value.text_extensions, (list) => {
                 <template #icon>
                   <div class="i-carbon-document-text" />
                 </template>
-                代码搜索工具会自动记录操作日志，包括索引过程、搜索请求和错误信息。日志文件位于 ~/.cunzhi/log/acemcp.log
+                代码搜索工具会自动记录操作日志，包括索引过程、搜索请求和错误信息。日志文件位于 ~/.continuum/log/acemcp.log
               </n-alert>
 
               <!-- 统一的日志和调试区域 -->

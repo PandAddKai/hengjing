@@ -1,4 +1,4 @@
-# 寸止 MCP 工具安装指南
+# 恒境 MCP 工具安装指南
 
 ## 快速安装
 
@@ -6,8 +6,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/imhuso/cunzhi.git
-cd cunzhi
+git clone https://github.com/imhuso/continuum.git
+cd continuum
 
 # 运行安装脚本
 chmod +x install.sh
@@ -16,11 +16,11 @@ chmod +x install.sh
 
 ### 方式二：下载预编译版本
 
-从 [Releases](https://github.com/imhuso/cunzhi/releases) 页面下载对应平台的预编译版本：
+从 [Releases](https://github.com/imhuso/continuum/releases) 页面下载对应平台的预编译版本：
 
-- **Linux**: `cunzhi-linux-x86_64.tar.gz`
-- **macOS**: `cunzhi-macos-universal.tar.gz`
-- **Windows**: `cunzhi-windows-x86_64.zip`
+- **Linux**: `continuum-linux-x86_64.tar.gz`
+- **macOS**: `continuum-macos-universal.tar.gz`
+- **Windows**: `continuum-windows-x86_64.zip`
 
 #### 安装步骤：
 
@@ -30,21 +30,21 @@ chmod +x install.sh
 
 ```bash
 # Linux/macOS 示例
-tar -xzf cunzhi-linux-x86_64.tar.gz
-sudo cp 等一下 寸止 /usr/local/bin/
+tar -xzf continuum-linux-x86_64.tar.gz
+sudo cp 等一下 恒境 /usr/local/bin/
 ```
 
 ```powershell
 # Windows 示例
-# 解压 zip 文件到 C:\cunzhi
-# 将 C:\cunzhi 添加到系统 PATH
+# 解压 zip 文件到 C:\continuum
+# 将 C:\continuum 添加到系统 PATH
 ```
 
 ## 验证安装
 
 ```bash
 # 检查工具是否正确安装
-寸止 --help
+恒境 --help
 等一下 --help
 ```
 
@@ -55,8 +55,8 @@ sudo cp 等一下 寸止 /usr/local/bin/
 ```json
 {
   "mcpServers": {
-    "寸止": {
-      "command": "寸止"
+    "恒境": {
+      "command": "恒境"
     }
   }
 }
@@ -66,7 +66,7 @@ sudo cp 等一下 寸止 /usr/local/bin/
 
 ### MCP 服务器模式
 ```bash
-寸止  # 启动 MCP 服务器
+恒境  # 启动 MCP 服务器
 ```
 
 ### 弹窗界面模式
@@ -77,7 +77,7 @@ sudo cp 等一下 寸止 /usr/local/bin/
 
 ## 工具说明
 
-- **寸止**: MCP 服务器，提供记忆管理和智能交互功能
+- **恒境**: MCP 服务器，提供记忆管理和智能交互功能
 - **等一下**: 弹窗界面，用于用户交互和设置
 
 ## 系统要求
@@ -91,7 +91,7 @@ sudo cp 等一下 寸止 /usr/local/bin/
 ### 权限问题
 ```bash
 # Linux/macOS
-chmod +x 等一下 寸止
+chmod +x 等一下 恒境
 ```
 
 ### PATH 问题
@@ -115,7 +115,7 @@ pnpm build
 cargo build --release
 
 # 安装
-cp target/release/等一下 target/release/寸止 ~/.local/bin/
+cp target/release/等一下 target/release/恒境 ~/.local/bin/
 ```
 
 ## 更新

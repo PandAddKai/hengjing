@@ -2,7 +2,7 @@ use chrono;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
-pub struct ZhiRequest {
+pub struct HengRequest {
     #[schemars(description = "要显示给用户的消息")]
     pub message: String,
     #[schemars(description = "预定义的选项列表（可选）")]

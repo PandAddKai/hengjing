@@ -29,8 +29,8 @@ pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
     log::info!("📡 发送 GitHub API 请求");
     
     let response = client
-        .get("https://api.github.com/repos/imhuso/cunzhi/releases/latest")
-        .header("User-Agent", "cunzhi-app/1.0")
+        .get("https://api.github.com/repos/imhuso/continuum/releases/latest")
+        .header("User-Agent", "continuum-app/1.0")
         .header("Accept", "application/vnd.github.v3+json")
         .timeout(std::time::Duration::from_secs(30))
         .send()
@@ -264,7 +264,7 @@ async fn download_and_install_update_impl(app: &AppHandle, update_info: &UpdateI
     log::info!("📥 开始下载文件: {}", update_info.download_url);
 
     // 创建临时目录
-    let temp_dir = std::env::temp_dir().join("cunzhi_update");
+    let temp_dir = std::env::temp_dir().join("continuum_update");
     fs::create_dir_all(&temp_dir)
         .map_err(|e| format!("创建临时目录失败: {}", e))?;
 
@@ -457,7 +457,7 @@ async fn install_from_archive(file_path: &PathBuf) -> Result<(), String> {
     log::info!("📍 当前可执行文件路径: {}", current_exe.display());
 
     // 创建临时解压目录
-    let temp_dir = std::env::temp_dir().join("cunzhi_extract");
+    let temp_dir = std::env::temp_dir().join("continuum_extract");
     if temp_dir.exists() {
         fs::remove_dir_all(&temp_dir)
             .map_err(|e| format!("清理临时目录失败: {}", e))?;
@@ -579,10 +579,10 @@ fn find_executable_in_dir(dir: &PathBuf) -> Result<PathBuf, String> {
         if let Some(file_name) = file.file_name().and_then(|n| n.to_str()) {
             log::info!("📄 检查文件: {} (路径: {})", file_name, file.display());
 
-            // 查找名为 "等一下" 或 "cunzhi" 的可执行文件
-            if file_name == "等一下" || file_name == "cunzhi" ||
-               file_name == "等一下.exe" || file_name == "cunzhi.exe" ||
-               file_name.starts_with("cunzhi") && !file_name.ends_with(".tar.gz") {
+            // 查找名为 "等一下" 或 "continuum" 的可执行文件
+            if file_name == "等一下" || file_name == "continuum" ||
+               file_name == "等一下.exe" || file_name == "continuum.exe" ||
+               file_name.starts_with("continuum") && !file_name.ends_with(".tar.gz") {
                 log::info!("✅ 找到目标可执行文件: {}", file_name);
                 return Ok(file.clone());
             }

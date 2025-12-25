@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2.0.0",
-  "productName": "寸止",
+  "productName": "恒境",
   "version": "0.4.0",
-  "identifier": "com.imhuso.cunzhi",
+  "identifier": "com.imhuso.continuum",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "寸止",
+        "title": "恒境",
         "width": 600,
         "height": 800,
         "minWidth": 600,
@@ -78,7 +78,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://api.github.com/repos/imhuso/cunzhi/releases/latest"
+        "https://api.github.com/repos/imhuso/continuum/releases/latest"
       ],
       "dialog": false,
       "pubkey": ""

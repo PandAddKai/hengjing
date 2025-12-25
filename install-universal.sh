@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 寸止 MCP 工具安装脚本 - 支持 macOS、Linux
+# 恒境 MCP 工具安装脚本 - 支持 macOS、Linux
 # 只需要构建和安装两个CLI工具即可运行MCP
 
 set -e
 
-echo "🚀 开始安装 寸止 MCP 工具..."
+echo "🚀 开始安装 恒境 MCP 工具..."
 
 # 检测操作系统
 OS="unknown"
@@ -40,7 +40,7 @@ echo "🔨 构建 MCP CLI 工具..."
 cargo build --release
 
 # 检查构建结果
-if [[ ! -f "target/release/等一下" ]] || [[ ! -f "target/release/寸止" ]]; then
+if [[ ! -f "target/release/等一下" ]] || [[ ! -f "target/release/恒境" ]]; then
     echo "❌ CLI 工具构建失败"
     echo "请检查构建错误并重试"
     exit 1
@@ -57,9 +57,9 @@ if [[ "$OS" == "macos" ]]; then
 
     echo "📋 安装 CLI 工具到 $INSTALL_DIR..."
     sudo cp "target/release/等一下" "$INSTALL_DIR/"
-    sudo cp "target/release/寸止" "$INSTALL_DIR/"
+    sudo cp "target/release/恒境" "$INSTALL_DIR/"
     sudo chmod +x "$INSTALL_DIR/等一下"
-    sudo chmod +x "$INSTALL_DIR/寸止"
+    sudo chmod +x "$INSTALL_DIR/恒境"
 
     echo "✅ CLI 工具已安装到 $INSTALL_DIR"
 
@@ -74,9 +74,9 @@ elif [[ "$OS" == "linux" ]]; then
 
     # 复制CLI工具
     cp "target/release/等一下" "$BIN_DIR/"
-    cp "target/release/寸止" "$BIN_DIR/"
+    cp "target/release/恒境" "$BIN_DIR/"
     chmod +x "$BIN_DIR/等一下"
-    chmod +x "$BIN_DIR/寸止"
+    chmod +x "$BIN_DIR/恒境"
 
     echo "✅ CLI 工具已安装到 $BIN_DIR"
 
@@ -95,11 +95,11 @@ else
 fi
 
 echo ""
-echo "🎉 寸止 MCP 工具安装完成！"
+echo "🎉 恒境 MCP 工具安装完成！"
 echo ""
 echo "📋 使用方法："
 echo "  💻 MCP 服务器模式:"
-echo "    寸止                            - 启动 MCP 服务器"
+echo "    恒境                            - 启动 MCP 服务器"
 echo ""
 echo "  🎨 弹窗界面模式:"
 echo "    等一下                          - 启动设置界面"
@@ -111,8 +111,8 @@ echo ""
 cat << 'EOF'
 {
   "mcpServers": {
-    "寸止": {
-      "command": "寸止"
+    "恒境": {
+      "command": "恒境"
     }
   }
 }
@@ -120,7 +120,7 @@ EOF
 echo ""
 echo "💡 重要说明："
 echo "  • 两个CLI工具必须在同一目录下才能正常工作"
-echo "  • '寸止' 是MCP服务器，'等一下' 是弹窗界面"
+echo "  • '恒境' 是MCP服务器，'等一下' 是弹窗界面"
 echo "  • 无需安装完整应用，只需要这两个CLI工具即可"
 echo ""
 

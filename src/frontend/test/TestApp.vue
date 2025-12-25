@@ -20,7 +20,7 @@ const tabs = [
   <n-message-provider>
     <div class="test-app">
       <div class="test-header">
-        <h1>寸止 - 组件样式测试环境</h1>
+        <h1>恒境 - 组件样式测试环境</h1>
         <p class="test-description">
           独立的测试环境，用于开发和调试组件样式，直接引用真实组件
         </p>
@@ -64,7 +64,7 @@ const tabs = [
               <div class="window-control maximize" />
             </div>
             <div class="window-title">
-              寸止
+              恒境
             </div>
             <div class="window-spacer" />
           </div>

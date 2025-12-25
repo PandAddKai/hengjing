@@ -359,7 +359,7 @@ pub async fn test_telegram_connection_with_api_url(
 
     // 发送测试消息
     let test_message =
-        "🤖 寸止应用测试消息\n\n这是一条来自寸止应用的测试消息，表示Telegram Bot配置成功！";
+        "🤖 恒境应用测试消息\n\n这是一条来自恒境应用的测试消息，表示Telegram Bot配置成功！";
 
     match bot.send_message(ChatId(chat_id_parsed), test_message).await {
         Ok(_) => Ok("测试消息发送成功！Telegram Bot配置正确。".to_string()),

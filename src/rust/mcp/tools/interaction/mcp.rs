@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rmcp::{Error as McpError, model::*};
 
-use crate::mcp::{ZhiRequest, PopupRequest};
+use crate::mcp::{HengRequest, PopupRequest};
 use crate::mcp::handlers::{create_tauri_popup, parse_mcp_response};
 use crate::mcp::utils::{generate_request_id, popup_error};
 
@@ -12,8 +12,8 @@ use crate::mcp::utils::{generate_request_id, popup_error};
 pub struct InteractionTool;
 
 impl InteractionTool {
-    pub async fn zhi(
-        request: ZhiRequest,
+    pub async fn heng(
+        request: HengRequest,
     ) -> Result<CallToolResult, McpError> {
         let popup_request = PopupRequest {
             id: generate_request_id(),

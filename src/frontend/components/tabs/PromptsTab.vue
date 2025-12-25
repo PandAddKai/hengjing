@@ -20,7 +20,7 @@ const promptContent = computed(() => {
     darkIconBg: tool.dark_icon_bg,
   })).filter((tool) => {
     // 只包含有提示词配置的工具
-    return tool.id === 'zhi' || tool.id === 'memory' || tool.id === 'sou'
+    return tool.id === 'heng' || tool.id === 'memory' || tool.id === 'sou'
   })
 
   return generateFullPrompt(frontendTools)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 寸止弹窗测试脚本
+# 恒境弹窗测试脚本
 # 使用 target/release 中的 CLI 工具测试弹窗功能
 
 set -e
@@ -20,7 +20,7 @@ BUILD_TYPE="release"
 CLI_TYPE="local"  # local 或 global
 CLI_PATH="$PROJECT_ROOT/target/$BUILD_TYPE"
 
-echo -e "${BLUE}🎯 寸止弹窗测试脚本${NC}"
+echo -e "${BLUE}🎯 恒境弹窗测试脚本${NC}"
 echo -e "${BLUE}================================${NC}"
 
 # 选择CLI类型
@@ -91,15 +91,15 @@ select_build_type() {
 check_global_cli() {
     echo -e "${YELLOW}🔍 检查全局CLI工具...${NC}"
 
-    local cunzhi_found=false
+    local continuum_found=false
     local dengxiaxia_found=false
 
-    # 检查寸止
-    if command -v 寸止 &> /dev/null; then
-        echo -e "${GREEN}✅ 找到全局 寸止 CLI: $(which 寸止)${NC}"
-        cunzhi_found=true
+    # 检查恒境
+    if command -v 恒境 &> /dev/null; then
+        echo -e "${GREEN}✅ 找到全局 恒境 CLI: $(which 恒境)${NC}"
+        continuum_found=true
     else
-        echo -e "${RED}❌ 未找到全局 寸止 CLI${NC}"
+        echo -e "${RED}❌ 未找到全局 恒境 CLI${NC}"
     fi
 
     # 检查等一下
@@ -110,7 +110,7 @@ check_global_cli() {
         echo -e "${RED}❌ 未找到全局 等一下 CLI${NC}"
     fi
 
-    if [[ "$cunzhi_found" == false || "$dengxiaxia_found" == false ]]; then
+    if [[ "$continuum_found" == false || "$dengxiaxia_found" == false ]]; then
         echo -e "${YELLOW}💡 全局CLI工具未完全安装，安装方法:${NC}"
         echo -e "${BLUE}   cargo install --path . --bins${NC}"
         echo -e "${YELLOW}   或者选择使用本地编译版本${NC}"
@@ -188,8 +188,8 @@ check_cli_tools() {
 
     echo -e "${YELLOW}📋 检查本地CLI工具 (${BUILD_TYPE})...${NC}"
 
-    if [[ ! -f "$CLI_PATH/寸止" ]]; then
-        echo -e "${RED}❌ 未找到 寸止 CLI工具${NC}"
+    if [[ ! -f "$CLI_PATH/恒境" ]]; then
+        echo -e "${RED}❌ 未找到 恒境 CLI工具${NC}"
         if [[ "$BUILD_TYPE" == "release" ]]; then
             echo -e "${YELLOW}💡 请先编译项目: cargo build --release${NC}"
         else
@@ -225,9 +225,9 @@ check_cli_tools() {
     fi
 
     # 检查执行权限
-    if [[ ! -x "$CLI_PATH/寸止" ]]; then
-        echo -e "${YELLOW}⚠️  寸止 CLI工具没有执行权限，正在添加...${NC}"
-        chmod +x "$CLI_PATH/寸止"
+    if [[ ! -x "$CLI_PATH/恒境" ]]; then
+        echo -e "${YELLOW}⚠️  恒境 CLI工具没有执行权限，正在添加...${NC}"
+        chmod +x "$CLI_PATH/恒境"
     fi
 
     if [[ ! -x "$CLI_PATH/等一下" ]]; then
@@ -237,7 +237,7 @@ check_cli_tools() {
 
     echo -e "${GREEN}✅ 本地CLI工具检查完成 (${BUILD_TYPE})${NC}"
     echo -e "   构建类型: ${BUILD_TYPE}"
-    echo -e "   寸止: $CLI_PATH/寸止"
+    echo -e "   恒境: $CLI_PATH/恒境"
     echo -e "   等一下: $CLI_PATH/等一下"
 }
 
@@ -415,16 +415,16 @@ show_cli_help() {
     echo -e "${YELLOW}📖 CLI工具帮助信息:${NC}"
     echo ""
 
-    local cunzhi_cmd=$(get_cli_command "寸止")
+    local continuum_cmd=$(get_cli_command "恒境")
     local dengxiaxia_cmd=$(get_cli_command "等一下")
 
-    echo -e "${BLUE}寸止 CLI:${NC}"
-    echo -e "${BLUE}命令: $cunzhi_cmd${NC}"
-    if $cunzhi_cmd --help 2>/dev/null; then
+    echo -e "${BLUE}恒境 CLI:${NC}"
+    echo -e "${BLUE}命令: $continuum_cmd${NC}"
+    if $continuum_cmd --help 2>/dev/null; then
         echo -e "${GREEN}✅ 帮助信息显示完成${NC}"
     else
-        echo -e "${YELLOW}⚠️  寸止 CLI 无帮助信息或不支持 --help 参数${NC}"
-        echo -e "${BLUE}尝试直接运行:${NC} $cunzhi_cmd"
+        echo -e "${YELLOW}⚠️  恒境 CLI 无帮助信息或不支持 --help 参数${NC}"
+        echo -e "${BLUE}尝试直接运行:${NC} $continuum_cmd"
     fi
     echo ""
 

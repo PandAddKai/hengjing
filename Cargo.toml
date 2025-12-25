@@ -1,5 +1,5 @@
 [package]
-name = "cunzhi"
+name = "continuum"
 version = "0.4.0"
 edition = "2021"
 default-run = "等一下"
@@ -12,7 +12,7 @@ name = "等一下"
 path = "src/rust/main.rs"
 
 [[bin]]
-name = "寸止"
+name = "恒境"
 path = "src/rust/bin/mcp_server.rs"
 
 [dependencies]

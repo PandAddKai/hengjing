@@ -192,7 +192,7 @@ pub async fn test_acemcp_connection(
 #[tauri::command]
 pub async fn read_acemcp_logs(_state: State<'_, AppState>) -> Result<Vec<String>, String> {
     let home = std::env::var("HOME").map_err(|_| "无法获取HOME目录".to_string())?;
-    let log_path = format!("{}/.cunzhi/log/acemcp.log", home);
+    let log_path = format!("{}/.continuum/log/acemcp.log", home);
     
     // 确保日志目录存在
     let log_dir = std::path::Path::new(&log_path).parent().unwrap();
