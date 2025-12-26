@@ -135,7 +135,7 @@ function testPopup() {
 
           <!-- 副标题 -->
           <p class="text-base opacity-50 font-normal text-white">
-            告别AI提前终止烦恼，助力AI更加持久
+            AI 交互确认助手，助力AI持续交互
           </p>
         </div>
 

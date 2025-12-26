@@ -111,7 +111,7 @@ try {
     $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
     $Shortcut.TargetPath = $MainExe
     $Shortcut.WorkingDirectory = $InstallDir
-    $Shortcut.Description = "恒境 - 告别AI提前终止烦恼，助力AI更加持久"
+    $Shortcut.Description = "恒境 - AI 交互确认助手，助力AI持续交互"
     # 图标已移除，使用默认图标
     $Shortcut.Save()
     Write-Host "✅ 开始菜单快捷方式已创建" -ForegroundColor Green

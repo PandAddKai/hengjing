@@ -45,7 +45,7 @@ function handleToggleAlwaysOnTop() {
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-primary-500" />
         <h1 class="text-base font-medium text-white">
-          恒境 - 告别AI提前终止烦恼，助力AI更加持久
+          恒境 - AI 交互确认助手，助力AI持续交互
         </h1>
       </div>
 

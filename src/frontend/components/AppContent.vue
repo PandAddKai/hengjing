@@ -106,8 +106,11 @@ onUnmounted(() => {
       v-if="props.showMcpPopup && props.mcpRequest"
       class="flex flex-col w-full h-screen bg-black text-white select-none"
     >
+      <!-- 拖拽区域 - macOS 标题栏，覆盖原生透明区域 -->
+      <div class="h-8 w-full bg-black-100 flex-shrink-0 absolute top-0 left-0 right-0 z-40" style="-webkit-app-region: drag;" />
+
       <!-- 头部 - 固定在顶部 -->
-      <div class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200">
+      <div class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200 pt-8">
         <PopupHeader
           :current-theme="props.appConfig.theme"
           :loading="false"
@@ -153,8 +156,11 @@ onUnmounted(() => {
       v-else-if="props.showMcpPopup || props.isInitializing"
       class="flex flex-col w-full h-screen bg-black text-white"
     >
+      <!-- 拖拽区域 - macOS 标题栏，覆盖原生透明区域 -->
+      <div class="h-8 w-full bg-black-100 flex-shrink-0 absolute top-0 left-0 right-0 z-40" style="-webkit-app-region: drag;" />
+
       <!-- 头部骨架 -->
-      <div class="flex-shrink-0 bg-black-100 border-b-2 border-black-200 px-4 py-3">
+      <div class="flex-shrink-0 bg-black-100 border-b-2 border-black-200 px-4 py-3 pt-11">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <n-skeleton
