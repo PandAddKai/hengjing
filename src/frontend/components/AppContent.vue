@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMessage } from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { setupExitWarningListener } from '../composables/useExitWarning'
 import { useKeyboard } from '../composables/useKeyboard'
 import { useVersionCheck } from '../composables/useVersionCheck'
@@ -70,6 +71,27 @@ function togglePopupSettings() {
   showPopupSettings.value = !showPopupSettings.value
 }
 
+// 手动处理窗口拖拽
+async function startWindowDrag(event: MouseEvent | TouchEvent) {
+  console.log('[DEBUG] startWindowDrag triggered', event.type)
+  // 如果是按钮等交互元素，不触发拖拽
+  // 如果是按钮等交互元素，不触发拖拽
+  const target = event.target as HTMLElement
+  if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
+    return
+  }
+  
+  // 阻止默认行为（如文本选择）
+  event.preventDefault()
+  
+  try {
+    const appWindow = getCurrentWindow()
+    await appWindow.startDragging()
+  } catch (error) {
+    console.error('Failed to start dragging:', error)
+  }
+}
+
 // 监听 MCP 请求变化，当有新请求时重置设置页面状态
 watch(() => props.mcpRequest, (newRequest) => {
   if (newRequest && showPopupSettings.value) {
@@ -106,11 +128,13 @@ onUnmounted(() => {
       v-if="props.showMcpPopup && props.mcpRequest"
       class="flex flex-col w-full h-screen bg-black text-white select-none"
     >
-      <!-- 拖拽区域 - macOS 标题栏，覆盖原生透明区域 -->
-      <div class="h-8 w-full bg-black-100 flex-shrink-0 absolute top-0 left-0 right-0 z-40" style="-webkit-app-region: drag;" />
-
-      <!-- 头部 - 固定在顶部 -->
-      <div class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200 pt-8">
+      <!-- 头部 - 固定在顶部，支持拖拽 -->
+      <div 
+        class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200 pt-8" 
+        style="-webkit-user-select: none; user-select: none; cursor: default;"
+        @mousedown="startWindowDrag"
+        @touchstart="startWindowDrag"
+      >
         <PopupHeader
           :current-theme="props.appConfig.theme"
           :loading="false"
@@ -156,12 +180,14 @@ onUnmounted(() => {
       v-else-if="props.showMcpPopup || props.isInitializing"
       class="flex flex-col w-full h-screen bg-black text-white"
     >
-      <!-- 拖拽区域 - macOS 标题栏，覆盖原生透明区域 -->
-      <div class="h-8 w-full bg-black-100 flex-shrink-0 absolute top-0 left-0 right-0 z-40" style="-webkit-app-region: drag;" />
-
-      <!-- 头部骨架 -->
-      <div class="flex-shrink-0 bg-black-100 border-b-2 border-black-200 px-4 py-3 pt-11">
-        <div class="flex items-center justify-between">
+      <!-- 头部骨架 - 支持拖拽 -->
+      <div 
+        class="flex-shrink-0 bg-black-100 border-b-2 border-black-200 px-4 py-3 pt-11"
+        style="-webkit-user-select: none; user-select: none; cursor: default;"
+        @mousedown="startWindowDrag"
+        @touchstart="startWindowDrag"
+      >
+        <div class="flex items-center justify-between pointer-events-none">
           <div class="flex items-center gap-3">
             <n-skeleton
               circle

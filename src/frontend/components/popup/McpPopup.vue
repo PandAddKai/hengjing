@@ -222,6 +222,12 @@ async function handleSubmit() {
   submitting.value = true
 
   try {
+    console.log('[DEBUG] handleSubmit 开始:', {
+      userInput: userInput.value,
+      selectedOptions: selectedOptions.value,
+      draggedImages: draggedImages.value.length,
+    })
+
     // 使用新的结构化数据格式
     const response = {
       user_input: userInput.value.trim() || null,
@@ -242,6 +248,8 @@ async function handleSubmit() {
     if (!response.user_input && response.selected_options.length === 0 && response.images.length === 0) {
       response.user_input = '用户确认继续'
     }
+
+    console.log('[DEBUG] handleSubmit 发送响应:', response)
 
     if (props.mockMode) {
       // 模拟模式下的延迟
@@ -267,6 +275,7 @@ async function handleSubmit() {
 
 // 处理输入更新
 function handleInputUpdate(data: { userInput: string, selectedOptions: string[], draggedImages: string[] }) {
+  console.log('[DEBUG] handleInputUpdate 收到:', data)
   userInput.value = data.userInput
   selectedOptions.value = data.selectedOptions
   draggedImages.value = data.draggedImages

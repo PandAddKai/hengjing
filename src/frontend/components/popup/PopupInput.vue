@@ -23,6 +23,7 @@ interface Emits {
   }]
   imageAdd: [image: string]
   imageRemove: [index: number]
+  submit: [] // 触发自动提交
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -174,6 +175,14 @@ function emitUpdateImmediate() {
 
   // 将条件性内容追加到用户输入
   const finalUserInput = currentInput + conditionalContent
+
+  console.log('[DEBUG] emitUpdateImmediate:', {
+    currentInput,
+    conditionalContent,
+    finalUserInput,
+    selectedOptions: selectedOptions.value,
+    uploadedImages: uploadedImages.value.length,
+  })
 
   emit('update', {
     userInput: finalUserInput,
@@ -363,12 +372,25 @@ function handleQuoteMessage(messageContent: string) {
 }
 
 // 插入prompt内容
-function insertPromptContent(content: string, mode: 'replace' | 'append' = 'replace') {
+async function insertPromptContent(content: string, mode: 'replace' | 'append' = 'replace') {
+  console.log('[DEBUG] insertPromptContent 开始:', { content, mode, before_userInput: userInput.value })
+
   if (mode === 'replace') {
     userInput.value = content
   }
   else {
     userInput.value = userInput.value.trim() + (userInput.value.trim() ? '\n\n' : '') + content
+  }
+
+  console.log('[DEBUG] insertPromptContent 设置后:', { userInput: userInput.value })
+
+  // 等待 Vue 更新 DOM，确保 textarea 的值已同步
+  await nextTick()
+
+  // 同步更新 textarea DOM 元素的值（确保响应式和 DOM 同步）
+  if (textareaRef.value) {
+    (textareaRef.value as HTMLTextAreaElement).value = userInput.value
+    console.log('[DEBUG] insertPromptContent DOM同步后:', { textarea_value: (textareaRef.value as HTMLTextAreaElement).value })
   }
 
   // 聚焦到输入框
@@ -388,6 +410,7 @@ function insertPromptContent(content: string, mode: 'replace' | 'append' = 'repl
     }
   }, 100)
 
+  console.log('[DEBUG] insertPromptContent 调用 emitUpdateImmediate')
   emitUpdateImmediate() // prompt插入需要即时响应
 }
 

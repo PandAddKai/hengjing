@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import IntroTab from '../tabs/IntroTab.vue'
@@ -48,6 +49,25 @@ function handleImageError(event: Event) {
   console.warn('LOGO图标加载失败，已隐藏')
 }
 
+// 手动处理窗口拖拽
+async function startWindowDrag(event: MouseEvent | TouchEvent) {
+  // 如果是按钮等交互元素，不触发拖拽
+  const target = event.target as HTMLElement
+  if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
+    return
+  }
+  
+  // 阻止默认行为（如文本选择）
+  event.preventDefault()
+  
+  try {
+    const appWindow = getCurrentWindow()
+    await appWindow.startDragging()
+  } catch (error) {
+    console.error('Failed to start dragging:', error)
+  }
+}
+
 // 测试popup功能 - 创建独立的popup窗口
 async function showTestMcpPopup() {
   try {
@@ -91,6 +111,13 @@ function testPopup() {
 
 <template>
   <div class="flex flex-col min-h-screen">
+    <!-- 顶部拖拽条 -->
+    <div 
+      class="fixed top-0 left-0 right-0 h-8 z-50"
+      style="-webkit-user-select: none; user-select: none; cursor: default;"
+      @mousedown="startWindowDrag"
+      @touchstart="startWindowDrag"
+    />
     <!-- 主要内容区域 -->
     <div class="flex-1 flex items-start justify-center p-6 pt-12">
       <div class="max-w-6xl w-full">

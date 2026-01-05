@@ -56,8 +56,8 @@
             "shell:allow-open",
             "updater:allow-check",
             "updater:allow-download",
-            "updater:allow-install"
-
+            "updater:allow-install",
+            "core:window:allow-start-dragging"
           ]
         }
       ]
