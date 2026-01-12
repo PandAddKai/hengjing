@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { McpRequest } from '../../types/popup'
 import hljs from 'highlight.js'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import MarkdownIt from 'markdown-it'
+import texmath from 'markdown-it-texmath'
 import { useMessage } from 'naive-ui'
 import { nextTick, onMounted, onUpdated, watch } from 'vue'
 
@@ -100,6 +103,13 @@ const md = new MarkdownIt({
     }
     return ''
   },
+})
+
+// 启用数学公式支持（支持 $...$ 行内公式和 $$...$$ 块级公式）
+md.use(texmath, {
+  engine: katex,
+  delimiters: 'dollars', // 使用 $...$ 和 $$...$$
+  katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
 })
 
 // 自定义链接渲染器 - 移除外链的点击功能，保持视觉样式
