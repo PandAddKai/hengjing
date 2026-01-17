@@ -256,12 +256,9 @@ async function handleSubmit() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       message.success('模拟响应发送成功')
     }
-    else {
-      // 实际发送响应
-      await invoke('send_mcp_response', { response })
-      await invoke('exit_app')
-    }
 
+    // 通过事件触发统一的响应处理（send_mcp_response + exit_app）
+    // 注意：不再在这里直接调用 invoke，避免重复发送
     emit('response', response)
   }
   catch (error) {
@@ -316,12 +313,9 @@ async function handleContinue() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       message.success('继续请求发送成功')
     }
-    else {
-      // 实际发送继续请求
-      await invoke('send_mcp_response', { response })
-      await invoke('exit_app')
-    }
 
+    // 通过事件触发统一的响应处理（send_mcp_response + exit_app）
+    // 注意：不再在这里直接调用 invoke，避免重复发送
     emit('response', response)
   }
   catch (error) {
@@ -378,12 +372,9 @@ Here is my original instruction:
       await new Promise(resolve => setTimeout(resolve, 1000))
       message.success('增强请求发送成功')
     }
-    else {
-      // 实际发送增强请求
-      await invoke('send_mcp_response', { response })
-      await invoke('exit_app')
-    }
 
+    // 通过事件触发统一的响应处理（send_mcp_response + exit_app）
+    // 注意：不再在这里直接调用 invoke，避免重复发送
     emit('response', response)
   }
   catch (error) {
