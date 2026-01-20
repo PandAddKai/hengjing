@@ -48,6 +48,49 @@ sudo ln -sf /Applications/恒境.app/Contents/MacOS/恒境 /usr/local/bin/恒境
 sudo ln -sf /Applications/恒境.app/Contents/MacOS/等 /usr/local/bin/等
 ```
 
+### Windows
+
+1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
+2. 解压到你喜欢的目录，例如 `C:\Program Files\hengjing\`
+3. 将该目录添加到系统 PATH 环境变量：
+   - 右键「此电脑」→「属性」→「高级系统设置」→「环境变量」
+   - 在「系统变量」中找到 `Path`，点击「编辑」→「新建」
+   - 添加解压目录路径，如 `C:\Program Files\hengjing`
+   - 确认保存，重启终端生效
+
+4. 验证安装：
+```powershell
+# 打开 PowerShell 或 CMD
+恒境.exe --version
+等.exe
+```
+
+#### Windows MCP 配置
+
+```json
+{
+  "mcpServers": {
+    "恒境": {
+      "command": "C:\\Program Files\\hengjing\\恒境.exe",
+      "autoApprove": ["heng"],
+      "timeout": 36000000
+    }
+  }
+}
+```
+
+> **💡 提示**：如果已添加到 PATH，也可以直接使用 `"command": "恒境.exe"`
+
+### Linux
+
+1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-linux-x86_64.tar.gz` 文件
+2. 解压并安装：
+```bash
+tar -xzf continuum-cli-*-linux-x86_64.tar.gz
+sudo mv 恒境 等 /usr/local/bin/
+sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等
+```
+
 ### 配置 MCP 客户端
 
 ```json
