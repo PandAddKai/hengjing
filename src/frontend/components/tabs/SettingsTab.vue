@@ -11,6 +11,7 @@ import ReplySettings from '../settings/ReplySettings.vue'
 import ShortcutSettings from '../settings/ShortcutSettings.vue'
 import TelegramSettings from '../settings/TelegramSettings.vue'
 import ThemeSettings from '../settings/ThemeSettings.vue'
+import TimeoutAutoSubmitSettings from '../settings/TimeoutAutoSubmitSettings.vue'
 import VersionChecker from '../settings/VersionChecker.vue'
 import WindowSettings from '../settings/WindowSettings.vue'
 
@@ -178,6 +179,30 @@ function handleWindowSizeUpdate(size: { width: number, height: number, fixed: bo
         </template>
         <div class="setting-content">
           <ReplySettings />
+        </div>
+      </n-collapse-item>
+
+      <!-- 超时自动提交设置 -->
+      <n-collapse-item name="timeout-auto-submit">
+        <template #header>
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 flex items-center justify-center mr-4">
+                <div class="i-carbon-timer text-lg text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <div class="text-lg font-medium tracking-tight mb-1">
+                  超时自动提交
+                </div>
+                <div class="text-sm opacity-60 font-normal">
+                  弹窗超时后自动发送配置的提示词
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div class="setting-content">
+          <TimeoutAutoSubmitSettings />
         </div>
       </n-collapse-item>
 

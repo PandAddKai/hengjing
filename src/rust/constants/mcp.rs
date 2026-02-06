@@ -27,6 +27,18 @@ pub const REQUEST_TIMEOUT_MS: u64 = 30000;
 /// MCP 重试次数
 pub const MAX_RETRY_COUNT: u32 = 3;
 
+/// 超时自动提交默认启用状态
+pub const DEFAULT_TIMEOUT_AUTO_SUBMIT_ENABLED: bool = false;
+
+/// 超时自动提交默认等待时间（秒）
+pub const DEFAULT_TIMEOUT_AUTO_SUBMIT_SECONDS: u32 = 360;
+
+/// 超时自动提交默认提示词来源
+pub const DEFAULT_TIMEOUT_AUTO_SUBMIT_PROMPT_SOURCE: &str = "continue";
+
+/// 超时自动提交默认手动提示词
+pub const DEFAULT_TIMEOUT_AUTO_SUBMIT_MANUAL_PROMPT: &str = "请按照最佳实践继续";
+
 // MCP 工具配置结构体
 #[derive(Debug, Clone)]
 pub struct McpToolConfig {

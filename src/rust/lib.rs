@@ -1,6 +1,7 @@
 pub mod app;
 pub mod config;
 pub mod constants;
+pub mod ipc;
 pub mod mcp;
 pub mod telegram;
 pub mod ui;
@@ -14,3 +15,4 @@ pub use utils::*;
 pub use constants::{app as app_constants, theme, validation, network, telegram as telegram_constants};
 pub use mcp::{server, tools, types, handlers, utils as mcp_utils};
 pub use ui::{window as ui_window, audio as ui_audio, audio_assets, updater};
+pub use ipc::{IpcRequest, IpcResponse};

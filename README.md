@@ -132,6 +132,16 @@ pnpm tauri:dev
 pnpm tauri:build
 ```
 
+## 🐛 故障排除
+
+### Cursor（Remote SSH）首次弹窗停留在“保持此页面打开即可...”
+
+现象：Cursor 第一次调用 MCP 后打开了恒境的等待页，但没有进入可输入的交互界面，导致交互卡住；断开/重连后再次调用才恢复正常。
+
+可用绕过：
+- 确保 `等`/恒境 UI 进程未在后台运行（退出后再触发 MCP，让它走“新进程 + --mcp-request 文件”路径）。
+- 清理残留 IPC socket：`rm -f /tmp/hengjing-ui.sock`，再触发一次 MCP。
+
 ## 🙏 致谢
 
 - [imhuso/cunzhi](https://github.com/imhuso/cunzhi) - 原项目

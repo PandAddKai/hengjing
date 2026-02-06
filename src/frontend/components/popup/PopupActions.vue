@@ -11,12 +11,14 @@ interface Props {
   connectionStatus?: string
   continueReplyEnabled?: boolean
   inputStatusText?: string
+  countdownRemaining?: number
 }
 
 interface Emits {
   submit: []
   continue: []
   enhance: []
+  cancelCountdown: []
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -26,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
   connectionStatus: '已连接',
   continueReplyEnabled: true,
   inputStatusText: '',
+  countdownRemaining: 0,
 })
 
 const emit = defineEmits<Emits>()
@@ -109,7 +112,14 @@ onMounted(() => {
     <div v-if="!loading" class="flex justify-between items-center">
       <!-- 左侧状态信息 -->
       <div class="flex items-center">
-        <div class="flex items-center gap-2 text-xs text-gray-600">
+        <!-- 倒计时显示 -->
+        <div v-if="countdownRemaining > 0" class="flex items-center gap-2 text-xs text-amber-600 cursor-pointer" @click="$emit('cancelCountdown')">
+          <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span class="font-medium">{{ countdownRemaining }}s后自动发送...</span>
+          <span class="opacity-60">(点击取消)</span>
+        </div>
+        <!-- 原有连接状态 -->
+        <div v-else class="flex items-center gap-2 text-xs text-gray-600">
           <div class="w-2 h-2 rounded-full bg-primary-500" />
           <span class="font-medium">{{ connectionStatus }}</span>
           <span class="opacity-60">|</span>

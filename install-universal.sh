@@ -31,12 +31,30 @@ echo "🔧 检查必要工具..."
 check_command "cargo"
 check_command "pnpm"
 
+# Ensure pnpm uses a modern Node (vite 6 requires Node >= 18).
+node_major="$(node --version 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || echo 0)"
+if [[ "$node_major" -lt 18 ]]; then
+    pnpm_bin="$(command -v pnpm)"
+    pnpm_dir="$(dirname "$pnpm_bin")"
+    if [[ -x "$pnpm_dir/node" ]]; then
+        export PATH="$pnpm_dir:$PATH"
+        node_major="$(node --version | sed -E 's/^v([0-9]+).*/\1/')"
+    fi
+fi
+if [[ "$node_major" -lt 18 ]]; then
+    echo "❌ Node.js 版本过低: $(node --version 2>/dev/null || true)"
+    echo "   需要 Node >= 18 才能运行 pnpm/vite 构建。"
+    exit 1
+fi
+
 # 构建前端资源（MCP弹窗界面需要）
 echo "📦 构建前端资源..."
 pnpm build
 
 # 构建MCP CLI工具
 echo "🔨 构建 MCP CLI 工具..."
+export CC="${CC:-/usr/bin/gcc}"
+export CXX="${CXX:-/usr/bin/g++}"
 cargo build --release
 
 # 检查构建结果

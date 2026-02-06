@@ -70,8 +70,10 @@ export function useAppInitialization(mcpHandler: ReturnType<typeof import('./use
       // 初始化MCP工具配置（在非MCP模式下）
       if (!isMcp) {
         await initMcpTools()
-        await setupMcpEventListener()
       }
+
+      // 无论是否为 MCP 模式，都监听后端事件（Web 单页面模式需要在 /r/:id 下继续接收新请求）
+      await setupMcpEventListener()
 
       // 如果是首次启动，标记已初始化（主题已在上面加载过）
       if (isFirstRun) {

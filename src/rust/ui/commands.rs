@@ -1,4 +1,4 @@
-use crate::config::{save_config, load_config, AppState, ReplyConfig, WindowConfig, CustomPrompt, CustomPromptConfig, ShortcutConfig, ShortcutBinding};
+use crate::config::{save_config, load_config, AppState, ReplyConfig, WindowConfig, CustomPrompt, CustomPromptConfig, ShortcutConfig, ShortcutBinding, TimeoutAutoSubmitConfig};
 use crate::constants::{window, ui, validation};
 use crate::mcp::types::{build_continue_response, build_send_response, ImageAttachment, PopupRequest};
 use crate::mcp::handlers::create_tauri_popup;
@@ -175,6 +175,37 @@ pub async fn set_reply_config(
             .lock()
             .map_err(|e| format!("获取配置失败: {}", e))?;
         config.reply_config = reply_config;
+    }
+
+    // 保存配置到文件
+    save_config(&state, &app)
+        .await
+        .map_err(|e| format!("保存配置失败: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_timeout_auto_submit_config(state: State<'_, AppState>) -> Result<TimeoutAutoSubmitConfig, String> {
+    let config = state
+        .config
+        .lock()
+        .map_err(|e| format!("获取配置失败: {}", e))?;
+    Ok(config.timeout_auto_submit_config.clone())
+}
+
+#[tauri::command]
+pub async fn set_timeout_auto_submit_config(
+    timeout_auto_submit_config: TimeoutAutoSubmitConfig,
+    state: State<'_, AppState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    {
+        let mut config = state
+            .config
+            .lock()
+            .map_err(|e| format!("获取配置失败: {}", e))?;
+        config.timeout_auto_submit_config = timeout_auto_submit_config;
     }
 
     // 保存配置到文件

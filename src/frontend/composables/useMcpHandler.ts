@@ -2,12 +2,18 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { ref } from 'vue'
 
+function isWebUiBuild(): boolean {
+  return typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1
+}
+
 /**
  * MCP处理组合式函数
  */
 export function useMcpHandler() {
   const mcpRequest = ref(null)
-  const showMcpPopup = ref(false)
+  // Web UI 默认进入“对话/等待态”，避免打开后落到主界面造成误解
+  const showMcpPopup = ref(isWebUiBuild())
+  const lastRequestId = ref<string | null>(null)
 
   /**
    * 统一的MCP响应处理
@@ -119,9 +125,18 @@ export function useMcpHandler() {
    */
   async function setupMcpEventListener() {
     try {
-      await listen('mcp-request', (event) => {
+      const handleEvent = (event: any) => {
+        const requestId = event?.payload?.id
+        if (requestId && lastRequestId.value === requestId)
+          return
+        if (requestId)
+          lastRequestId.value = requestId
         showMcpDialog(event.payload)
-      })
+      }
+
+      // 兼容：旧版本通过 IPC 转发使用 `ipc-mcp-request`，新版本统一为 `mcp-request`
+      await listen('mcp-request', handleEvent)
+      await listen('ipc-mcp-request', handleEvent)
     }
     catch (error) {
       console.error('设置MCP事件监听器失败:', error)

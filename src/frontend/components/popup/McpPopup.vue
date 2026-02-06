@@ -70,6 +70,15 @@ const inputRef = ref()
 const continueReplyEnabled = ref(true)
 const continuePrompt = ref('请按照最佳实践继续')
 
+// 超时自动提交状态
+const timeoutAutoSubmitEnabled = ref(false)
+const timeoutSeconds = ref(360)
+const timeoutPromptSource = ref('continue')
+const timeoutCustomPromptId = ref<string | null>(null)
+const timeoutManualPrompt = ref('请按照最佳实践继续')
+const countdownRemaining = ref(0)
+const countdownTimer = ref<ReturnType<typeof setInterval> | null>(null)
+
 // 计算属性
 const isVisible = computed(() => !!props.request)
 const hasOptions = computed(() => (props.request?.predefined_options?.length ?? 0) > 0)
@@ -100,6 +109,110 @@ async function loadReplyConfig() {
   }
 }
 
+// 加载超时自动提交配置
+async function loadTimeoutAutoSubmitConfig() {
+  try {
+    const config = await invoke('get_timeout_auto_submit_config') as any
+    if (config) {
+      timeoutAutoSubmitEnabled.value = config.enabled ?? false
+      timeoutSeconds.value = config.timeout_seconds ?? 360
+      timeoutPromptSource.value = config.prompt_source ?? 'continue'
+      timeoutCustomPromptId.value = config.custom_prompt_id ?? null
+      timeoutManualPrompt.value = config.manual_prompt ?? '请按照最佳实践继续'
+    }
+  }
+  catch (error) {
+    console.log('加载超时自动提交配置失败，使用默认值:', error)
+  }
+}
+
+// 开始倒计时
+function startCountdown() {
+  stopCountdown()
+  if (!timeoutAutoSubmitEnabled.value || timeoutSeconds.value <= 0)
+    return
+
+  countdownRemaining.value = timeoutSeconds.value
+  countdownTimer.value = setInterval(() => {
+    countdownRemaining.value--
+    if (countdownRemaining.value <= 0) {
+      stopCountdown()
+      handleTimeoutAutoSubmit()
+    }
+  }, 1000)
+}
+
+// 停止倒计时
+function stopCountdown() {
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+    countdownTimer.value = null
+  }
+  countdownRemaining.value = 0
+}
+
+// 取消倒计时（语义别名）
+function cancelCountdown() {
+  stopCountdown()
+}
+
+// 超时自动提交处理
+async function handleTimeoutAutoSubmit() {
+  if (submitting.value)
+    return
+
+  submitting.value = true
+
+  try {
+    let promptContent = ''
+
+    if (timeoutPromptSource.value === 'continue') {
+      promptContent = continuePrompt.value
+    }
+    else if (timeoutPromptSource.value === 'custom' && timeoutCustomPromptId.value) {
+      try {
+        const config = await invoke('get_custom_prompt_config') as any
+        const prompt = config?.prompts?.find((p: any) => p.id === timeoutCustomPromptId.value)
+        if (prompt) {
+          promptContent = prompt.content
+        }
+        else {
+          promptContent = continuePrompt.value
+        }
+      }
+      catch {
+        promptContent = continuePrompt.value
+      }
+    }
+    else if (timeoutPromptSource.value === 'manual') {
+      promptContent = timeoutManualPrompt.value
+    }
+    else {
+      promptContent = continuePrompt.value
+    }
+
+    const response = {
+      user_input: promptContent,
+      selected_options: [],
+      images: [],
+      metadata: {
+        timestamp: new Date().toISOString(),
+        request_id: props.request?.id || null,
+        source: 'popup_timeout_auto_submit',
+      },
+    }
+
+    emit('response', response)
+  }
+  catch (error) {
+    console.error('超时自动提交失败:', error)
+    message.error('超时自动提交失败')
+  }
+  finally {
+    submitting.value = false
+  }
+}
+
 // 监听配置变化（当从设置页面切换回来时）
 watch(() => props.appConfig.reply, (newReplyConfig) => {
   if (newReplyConfig) {
@@ -112,15 +225,21 @@ watch(() => props.appConfig.reply, (newReplyConfig) => {
 let telegramUnlisten: (() => void) | null = null
 
 // 监听请求变化
-watch(() => props.request, (newRequest) => {
+watch(() => props.request, async (newRequest) => {
   if (newRequest) {
     resetForm()
     loading.value = true
     // 每次显示弹窗时重新加载配置
     loadReplyConfig()
+    await loadTimeoutAutoSubmitConfig()
     setTimeout(() => {
       loading.value = false
+      // loading 结束后开始倒计时
+      startCountdown()
     }, 300)
+  }
+  else {
+    stopCountdown()
   }
 }, { immediate: true })
 
@@ -201,6 +320,7 @@ onMounted(() => {
 
 // 组件卸载时清理监听器
 onUnmounted(() => {
+  stopCountdown()
   if (telegramUnlisten) {
     telegramUnlisten()
   }
@@ -219,6 +339,7 @@ async function handleSubmit() {
   if (!canSubmit.value || submitting.value)
     return
 
+  stopCountdown()
   submitting.value = true
 
   try {
@@ -276,6 +397,8 @@ function handleInputUpdate(data: { userInput: string, selectedOptions: string[],
   userInput.value = data.userInput
   selectedOptions.value = data.selectedOptions
   draggedImages.value = data.draggedImages
+  // 用户有输入操作时取消倒计时
+  cancelCountdown()
 }
 
 // 处理图片添加 - 移除重复逻辑，避免双重添加
@@ -293,6 +416,7 @@ async function handleContinue() {
   if (submitting.value)
     return
 
+  stopCountdown()
   submitting.value = true
 
   try {
@@ -339,6 +463,7 @@ async function handleEnhance() {
   if (submitting.value)
     return
 
+  stopCountdown()
   submitting.value = true
 
   try {
@@ -410,7 +535,9 @@ Here is my original instruction:
       <PopupActions
         :request="request" :loading="loading" :submitting="submitting" :can-submit="canSubmit"
         :continue-reply-enabled="continueReplyEnabled" :input-status-text="inputStatusText"
+        :countdown-remaining="countdownRemaining"
         @submit="handleSubmit" @continue="handleContinue" @enhance="handleEnhance"
+        @cancel-countdown="cancelCountdown"
       />
     </div>
   </div>

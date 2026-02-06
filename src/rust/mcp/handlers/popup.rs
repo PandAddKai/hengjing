@@ -4,11 +4,42 @@ use std::fs;
 use std::path::Path;
 
 use crate::mcp::types::PopupRequest;
+use crate::ipc::{IpcRequest, client::IpcClient};
+use crate::log_important;
 
 /// 创建 Tauri 弹窗
 ///
-/// 优先调用与 MCP 服务器同目录的 UI 命令，找不到时使用全局版本
+/// 优先通过 IPC 发送到已运行的 UI，失败则启动新进程
 pub fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
+    // 尝试通过 IPC 发送到已运行的 UI
+    let ipc_request = IpcRequest::from(request);
+    
+    // 使用 tokio runtime 运行异步代码
+    let rt = tokio::runtime::Runtime::new()?;
+    
+    // 首先检查 UI 是否在运行
+    let ui_running = rt.block_on(IpcClient::is_ui_running());
+    
+    if ui_running {
+        log_important!(info, "检测到 UI 正在运行，通过 IPC 发送请求");
+        match rt.block_on(IpcClient::send_request(&ipc_request)) {
+            Ok(response) => {
+                log_important!(info, "IPC 响应成功");
+                return Ok(response);
+            }
+            Err(e) => {
+                log_important!(warn, "IPC 请求失败: {}，回退到启动新进程", e);
+            }
+        }
+    }
+    
+    // IPC 失败或 UI 未运行，启动新进程
+    log_important!(info, "启动新的 UI 进程");
+    create_new_ui_process(request)
+}
+
+/// 启动新的 UI 进程处理请求
+fn create_new_ui_process(request: &PopupRequest) -> Result<String> {
     // 创建临时请求文件 - 跨平台适配
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join(format!("mcp_request_{}.json", request.id));
@@ -42,8 +73,6 @@ pub fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
 }
 
 /// 查找等 UI 命令的路径
-///
-/// 按优先级查找：同目录 -> 全局版本 -> 开发环境
 fn find_ui_command() -> Result<String> {
     // 1. 优先尝试与当前 MCP 服务器同目录的等命令
     if let Ok(current_exe) = std::env::current_exe() {
@@ -55,12 +84,11 @@ fn find_ui_command() -> Result<String> {
         }
     }
 
-    // 2. 尝试全局命令（最常见的部署方式）
+    // 2. 尝试全局命令
     if test_command_available("等") {
         return Ok("等".to_string());
     }
 
-    // 3. 如果都找不到，返回详细错误信息
     anyhow::bail!(
         "找不到等 UI 命令。请确保：\n\
          1. 已编译项目：cargo build --release\n\
@@ -69,7 +97,6 @@ fn find_ui_command() -> Result<String> {
     )
 }
 
-/// 测试命令是否可用
 fn test_command_available(command: &str) -> bool {
     Command::new(command)
         .arg("--version")
@@ -78,7 +105,6 @@ fn test_command_available(command: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// 检查文件是否可执行
 fn is_executable(path: &Path) -> bool {
     #[cfg(unix)]
     {
@@ -90,7 +116,6 @@ fn is_executable(path: &Path) -> bool {
 
     #[cfg(windows)]
     {
-        // Windows 上检查文件扩展名
         path.extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.eq_ignore_ascii_case("exe"))

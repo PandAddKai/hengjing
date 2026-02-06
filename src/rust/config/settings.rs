@@ -15,6 +15,8 @@ pub struct AppConfig {
     pub mcp_config: McpConfig, // MCP工具配置
     #[serde(default = "default_telegram_config")]
     pub telegram_config: TelegramConfig, // Telegram Bot配置
+    #[serde(default = "default_timeout_auto_submit_config")]
+    pub timeout_auto_submit_config: TimeoutAutoSubmitConfig, // 超时自动提交配置
     #[serde(default = "default_custom_prompt_config")]
     pub custom_prompt_config: CustomPromptConfig, // 自定义prompt配置
     #[serde(default = "default_shortcut_config")]
@@ -176,6 +178,21 @@ pub struct ShortcutKey {
     pub meta: bool, // macOS的Cmd键
 }
 
+// 超时自动提交配置
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TimeoutAutoSubmitConfig {
+    #[serde(default = "default_timeout_auto_submit_enabled")]
+    pub enabled: bool,
+    #[serde(default = "default_timeout_auto_submit_seconds")]
+    pub timeout_seconds: u32,
+    #[serde(default = "default_timeout_auto_submit_prompt_source")]
+    pub prompt_source: String, // "continue" | "custom" | "manual"
+    #[serde(default)]
+    pub custom_prompt_id: Option<String>,
+    #[serde(default = "default_timeout_auto_submit_manual_prompt")]
+    pub manual_prompt: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TelegramConfig {
     #[serde(default = "default_telegram_enabled")]
@@ -207,6 +224,7 @@ impl Default for AppConfig {
             reply_config: default_reply_config(),
             mcp_config: default_mcp_config(),
             telegram_config: default_telegram_config(),
+            timeout_auto_submit_config: default_timeout_auto_submit_config(),
             custom_prompt_config: default_custom_prompt_config(),
             shortcut_config: default_shortcut_config(),
         }
@@ -396,6 +414,33 @@ pub fn default_telegram_hide_frontend_popup() -> bool {
 
 pub fn default_telegram_api_base_url() -> String {
     telegram::API_BASE_URL.to_string()
+}
+
+// 超时自动提交默认值函数
+pub fn default_timeout_auto_submit_config() -> TimeoutAutoSubmitConfig {
+    TimeoutAutoSubmitConfig {
+        enabled: default_timeout_auto_submit_enabled(),
+        timeout_seconds: default_timeout_auto_submit_seconds(),
+        prompt_source: default_timeout_auto_submit_prompt_source(),
+        custom_prompt_id: None,
+        manual_prompt: default_timeout_auto_submit_manual_prompt(),
+    }
+}
+
+pub fn default_timeout_auto_submit_enabled() -> bool {
+    mcp::DEFAULT_TIMEOUT_AUTO_SUBMIT_ENABLED
+}
+
+pub fn default_timeout_auto_submit_seconds() -> u32 {
+    mcp::DEFAULT_TIMEOUT_AUTO_SUBMIT_SECONDS
+}
+
+pub fn default_timeout_auto_submit_prompt_source() -> String {
+    mcp::DEFAULT_TIMEOUT_AUTO_SUBMIT_PROMPT_SOURCE.to_string()
+}
+
+pub fn default_timeout_auto_submit_manual_prompt() -> String {
+    mcp::DEFAULT_TIMEOUT_AUTO_SUBMIT_MANUAL_PROMPT.to_string()
 }
 
 impl WindowConfig {
