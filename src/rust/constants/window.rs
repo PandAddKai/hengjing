@@ -19,7 +19,7 @@ pub const DEFAULT_WIDTH: f64 = 600.0;
 pub const DEFAULT_HEIGHT: f64 = 900.0;
 
 /// 默认置顶启用状态
-pub const DEFAULT_ALWAYS_ON_TOP: bool = true;
+pub const DEFAULT_ALWAYS_ON_TOP: bool = false;
 
 /// 默认窗口固定模式状态
 pub const DEFAULT_FIXED_MODE: bool = false;

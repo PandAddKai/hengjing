@@ -397,8 +397,6 @@ function handleInputUpdate(data: { userInput: string, selectedOptions: string[],
   userInput.value = data.userInput
   selectedOptions.value = data.selectedOptions
   draggedImages.value = data.draggedImages
-  // 用户有输入操作时取消倒计时
-  cancelCountdown()
 }
 
 // 处理图片添加 - 移除重复逻辑，避免双重添加
