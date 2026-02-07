@@ -2,6 +2,8 @@
 import { invoke } from '@tauri-apps/api/core'
 import { onMounted, ref, watch } from 'vue'
 
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
 interface TimeoutAutoSubmitConfig {
   enabled: boolean
   timeout_seconds: number
@@ -59,6 +61,13 @@ async function updateConfig() {
   catch (error) {
     console.error('保存超时自动提交配置失败:', error)
   }
+}
+
+// 防抖保存（用于文本输入场景）
+function debouncedUpdateConfig() {
+  if (saveTimer)
+    clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => updateConfig(), 500)
 }
 
 // 当切换到 custom 来源时加载 prompt 列表
@@ -202,7 +211,7 @@ onMounted(() => {
           size="small"
           placeholder="请输入超时后自动发送的提示词"
           :autosize="{ minRows: 2, maxRows: 5 }"
-          @input="updateConfig"
+          @input="debouncedUpdateConfig"
         />
       </div>
     </template>

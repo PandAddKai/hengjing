@@ -203,12 +203,12 @@ async function handleTimeoutAutoSubmit() {
     }
 
     emit('response', response)
+    // 不重置 submitting — emit 后父组件会处理响应并关闭窗口
+    // 保持 submitting=true 防止用户在关闭前再次操作
   }
   catch (error) {
     console.error('超时自动提交失败:', error)
     message.error('超时自动提交失败')
-  }
-  finally {
     submitting.value = false
   }
 }
@@ -230,7 +230,7 @@ watch(() => props.request, async (newRequest) => {
     resetForm()
     loading.value = true
     // 每次显示弹窗时重新加载配置
-    loadReplyConfig()
+    await loadReplyConfig()
     await loadTimeoutAutoSubmitConfig()
     setTimeout(() => {
       loading.value = false
