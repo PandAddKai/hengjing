@@ -45,7 +45,7 @@ fn default_category() -> String {
     "context".to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PopupRequest {
     pub id: String,
     pub message: String,

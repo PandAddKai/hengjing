@@ -10,19 +10,16 @@ use crate::log_important;
 /// 创建 Tauri 弹窗
 ///
 /// 优先通过 IPC 发送到已运行的 UI，失败则启动新进程
-pub fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
+pub async fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
     // 尝试通过 IPC 发送到已运行的 UI
     let ipc_request = IpcRequest::from(request);
-    
-    // 使用 tokio runtime 运行异步代码
-    let rt = tokio::runtime::Runtime::new()?;
-    
+
     // 首先检查 UI 是否在运行
-    let ui_running = rt.block_on(IpcClient::is_ui_running());
-    
+    let ui_running = IpcClient::is_ui_running().await;
+
     if ui_running {
         log_important!(info, "检测到 UI 正在运行，通过 IPC 发送请求");
-        match rt.block_on(IpcClient::send_request(&ipc_request)) {
+        match IpcClient::send_request(&ipc_request).await {
             Ok(response) => {
                 log_important!(info, "IPC 响应成功");
                 return Ok(response);
@@ -32,10 +29,12 @@ pub fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
             }
         }
     }
-    
-    // IPC 失败或 UI 未运行，启动新进程
+
+    // IPC 失败或 UI 未运行，启动新进程（同步阻塞操作，放到 spawn_blocking 中）
     log_important!(info, "启动新的 UI 进程");
-    create_new_ui_process(request)
+    let request_clone = request.clone();
+    tokio::task::spawn_blocking(move || create_new_ui_process(&request_clone))
+        .await?
 }
 
 /// 启动新的 UI 进程处理请求
