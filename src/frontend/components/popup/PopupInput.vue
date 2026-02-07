@@ -581,7 +581,13 @@ function handleTextInput(event: Event) {
   if (isComposing.value)
     return
 
-  // 不立即更新 userInput，只触发防抖的 emitUpdate
+  // 同步 userInput 以防止 Vue 重渲染时（如添加图片）textarea 被重置
+  const target = event.target as HTMLTextAreaElement
+  if (target) {
+    userInput.value = target.value
+  }
+
+  // 触发防抖的 emitUpdate
   debouncedEmitUpdate()
 }
 
