@@ -29,8 +29,8 @@ pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
     log::info!("📡 发送 GitHub API 请求");
     
     let response = client
-        .get("https://api.github.com/repos/imhuso/continuum/releases/latest")
-        .header("User-Agent", "continuum-app/1.0")
+        .get("https://api.github.com/repos/KerwinKoo/hengjing/releases/latest")
+        .header("User-Agent", "qieman-app/1.0")
         .header("Accept", "application/vnd.github.v3+json")
         .timeout(std::time::Duration::from_secs(30))
         .send()

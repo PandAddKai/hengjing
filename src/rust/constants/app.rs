@@ -1,25 +1,25 @@
 // 应用程序相关常量
 
 /// 应用程序名称
-pub const NAME: &str = "恒境";
+pub const NAME: &str = "且慢";
 
 /// 应用程序英文名称
-pub const NAME_EN: &str = "continuum";
+pub const NAME_EN: &str = "qieman";
 
 /// 应用程序描述
-pub const DESCRIPTION: &str = "智能代码审查工具";
+pub const DESCRIPTION: &str = "且慢 - AI 交互确认助手，支持 MCP 协议";
 
 /// 应用程序版本（从 Cargo.toml 获取）
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 应用程序作者
-pub const AUTHOR: &str = "imhuso";
+pub const AUTHOR: &str = "KerwinKoo";
 
 /// 应用程序主页
-pub const HOMEPAGE: &str = "https://github.com/imhuso/continuum";
+pub const HOMEPAGE: &str = "https://github.com/KerwinKoo/hengjing";
 
 /// 应用程序仓库
-pub const REPOSITORY: &str = "https://github.com/imhuso/continuum";
+pub const REPOSITORY: &str = "https://github.com/KerwinKoo/hengjing";
 
 /// 应用程序许可证
 pub const LICENSE: &str = "MIT";
@@ -31,7 +31,7 @@ pub const CONFIG_FILE_NAME: &str = "config.json";
 pub const LOG_FILE_PREFIX: &str = "continuum";
 
 /// 应用程序标识符（用于系统集成）
-pub const APP_IDENTIFIER: &str = "com.imhuso.continuum";
+pub const APP_IDENTIFIER: &str = "com.qieman.app";
 
 /// 用户代理字符串
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));

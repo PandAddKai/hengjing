@@ -1,6 +1,6 @@
 // MCP 工具相关常量
 
-/// 恒境工具标识符
+/// 且慢工具标识符
 pub const TOOL_HENG: &str = "heng";
 
 /// 记忆管理工具标识符
@@ -72,7 +72,7 @@ impl Default for McpConfig {
     fn default() -> Self {
         Self {
             tools: vec![
-                McpToolConfig::new(TOOL_HENG, true, false), // 恒境工具不可禁用
+                McpToolConfig::new(TOOL_HENG, true, false), // 且慢工具不可禁用
                 McpToolConfig::new(TOOL_JI, false, true),   // 记忆管理工具可禁用，默认关闭
                 McpToolConfig::new(TOOL_SOU, false, true), // 代码搜索工具可禁用，默认关闭
             ],

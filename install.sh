@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 恒境 MCP 工具 - 最简化安装脚本
+# 且慢 MCP 工具 - 最简化安装脚本
 # 只需构建两个CLI工具即可运行MCP
 
 set -e
 
-echo "🚀 安装 恒境 MCP 工具..."
+echo "🚀 安装 且慢 MCP 工具..."
 
 # 检查必要工具
 for cmd in cargo pnpm; do
@@ -66,8 +66,8 @@ fi
 
 echo ""
 echo "📋 使用方法："
-echo "  恒境        - 启动 MCP 服务器"
+echo "  恒境        - 启动 MCP 服务器（或使用 qieman serve）"
 echo "  等          - 启动弹窗界面"
 echo ""
 echo "📝 MCP 客户端配置："
-echo '{"mcpServers": {"恒境": {"command": "恒境"}}}'
+echo '{"mcpServers": {"且慢": {"command": "恒境"}}}'

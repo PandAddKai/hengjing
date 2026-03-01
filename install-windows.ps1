@@ -1,4 +1,4 @@
-# 恒境 Windows 安装脚本
+# 且慢 Windows 安装脚本
 
 param(
     [switch]$BuildOnly = $false
@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "🚀 开始安装 恒境 (Windows)..." -ForegroundColor Green
+Write-Host "🚀 开始安装 且慢 (Windows)..." -ForegroundColor Green
 
 # 检查必要的工具
 function Test-Command {
@@ -42,21 +42,23 @@ pnpm build
 Write-Host "🔨 构建二进制文件..." -ForegroundColor Yellow
 cargo build --release
 
-# 检查构建结果
-$BinaryPath = "target\release\continuum.exe"
-if (-not (Test-Path $BinaryPath)) {
-    Write-Host "❌ 二进制文件构建失败: $BinaryPath" -ForegroundColor Red
+# 检查构建结果 (qieman 为主入口，等 为 GUI，恒境 为 MCP 服务器)
+$QiemanPath = "target\release\qieman.exe"
+$DengPath = "target\release\等.exe"
+$HengPath = "target\release\恒境.exe"
+if (-not (Test-Path $QiemanPath) -or -not (Test-Path $DengPath) -or -not (Test-Path $HengPath)) {
+    Write-Host "❌ 二进制文件构建失败，需要: qieman.exe, 等.exe, 恒境.exe" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "✅ 二进制文件构建成功: $BinaryPath" -ForegroundColor Green
+Write-Host "✅ 二进制文件构建成功" -ForegroundColor Green
 
 # 如果只构建不安装，则在这里退出
 if ($BuildOnly) {
     Write-Host ""
-    Write-Host "🎉 恒境 构建完成！" -ForegroundColor Green
+    Write-Host "🎉 且慢 构建完成！" -ForegroundColor Green
     Write-Host ""
-    Write-Host "📋 二进制文件位置: $BinaryPath" -ForegroundColor Cyan
+    Write-Host "📋 二进制文件位置: target\release\" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "如需安装，请重新运行脚本而不使用 -BuildOnly 参数。"
     exit 0
@@ -64,21 +66,21 @@ if ($BuildOnly) {
 
 # 创建安装目录
 $LocalAppData = $env:LOCALAPPDATA
-$InstallDir = "$LocalAppData\恒境"
+$InstallDir = "$LocalAppData\且慢"
 $BinDir = "$InstallDir\bin"
 
 Write-Host "📁 创建安装目录: $InstallDir" -ForegroundColor Yellow
 New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
 
 # 复制二进制文件
-$MainExe = "$BinDir\continuum.exe"
+$MainExe = "$BinDir\qieman.exe"
 $UiExe = "$BinDir\等.exe"
 $McpExe = "$BinDir\恒境.exe"
 
 Write-Host "📋 安装二进制文件..." -ForegroundColor Yellow
-Copy-Item $BinaryPath $MainExe -Force
-Copy-Item $BinaryPath $UiExe -Force
-Copy-Item $BinaryPath $McpExe -Force
+Copy-Item $QiemanPath $MainExe -Force
+Copy-Item $DengPath $UiExe -Force
+Copy-Item $HengPath $McpExe -Force
 
 Write-Host "✅ 二进制文件已安装到: $BinDir" -ForegroundColor Green
 
@@ -104,14 +106,14 @@ if ($CurrentPath -notlike "*$BinDir*") {
 
 # 创建开始菜单快捷方式
 $StartMenuDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs"
-$ShortcutPath = "$StartMenuDir\恒境.lnk"
+$ShortcutPath = "$StartMenuDir\且慢.lnk"
 
 try {
     $WshShell = New-Object -ComObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
     $Shortcut.TargetPath = $MainExe
     $Shortcut.WorkingDirectory = $InstallDir
-    $Shortcut.Description = "恒境 - AI 交互确认助手，助力AI持续交互"
+    $Shortcut.Description = "且慢 - AI 交互确认助手，助力AI持续交互"
     # 图标已移除，使用默认图标
     $Shortcut.Save()
     Write-Host "✅ 开始菜单快捷方式已创建" -ForegroundColor Green
@@ -121,29 +123,4 @@ catch {
 }
 
 Write-Host ""
-Write-Host "🎉 恒境 安装完成！" -ForegroundColor Green
-Write-Host ""
-Write-Host "📋 使用方法：" -ForegroundColor Cyan
-Write-Host "  🖥️  GUI模式: 从开始菜单打开 '恒境'" -ForegroundColor White
-Write-Host "  💻 命令行模式:" -ForegroundColor White
-Write-Host "    等                              - 启动 UI 界面" -ForegroundColor White
-Write-Host "    等 --mcp-request file           - MCP 弹窗模式" -ForegroundColor White
-Write-Host "    恒境                            - 启动 MCP 服务器" -ForegroundColor White
-Write-Host ""
-Write-Host "📝 配置 MCP 客户端：" -ForegroundColor Cyan
-Write-Host "将以下内容添加到您的 MCP 客户端配置中：" -ForegroundColor White
-Write-Host ""
-Write-Host @"
-{
-  "mcpServers": {
-    "恒境": {
-      "command": "恒境"
-    }
-  }
-}
-"@ -ForegroundColor Gray
-Write-Host ""
-Write-Host "📁 安装位置: $InstallDir" -ForegroundColor Cyan
-Write-Host "🔗 命令行工具: $BinDir" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "💡 如果命令行工具无法使用，请重新启动命令提示符或 PowerShell" -ForegroundColor Yellow
+Write-Host "

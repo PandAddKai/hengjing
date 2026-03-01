@@ -45,12 +45,12 @@ impl From<&crate::mcp::types::PopupRequest> for IpcRequest {
 /// 获取 IPC socket 路径
 #[cfg(unix)]
 pub fn get_socket_path() -> PathBuf {
-    std::env::temp_dir().join("hengjing-ui.sock")
+    std::env::temp_dir().join("qieman-ui.sock")
 }
 
 /// Windows 暂未实现（占位，避免跨平台编译错误）
 #[cfg(windows)]
 pub fn get_socket_path() -> PathBuf {
-    std::env::temp_dir().join("hengjing-ui.sock")
+    std::env::temp_dir().join("qieman-ui.sock")
 }
 

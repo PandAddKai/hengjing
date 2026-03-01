@@ -1,6 +1,5 @@
 # Rust
 target/
-Cargo.lock
 
 # Node.js
 node_modules/
@@ -65,16 +64,18 @@ config.json
 *.dmg
 *.tar.gz
 
-# Tauri specific
-src-tauri/target/
-src-tauri/Cargo.lock
-
 # macOS specific
 *.app/
 
-# scripts
+# Scripts and binaries
 temp/
 scripts/
 *.exe
+
+# Markdown (ignore generated changelogs etc, keep project docs)
 *.md
+!README.md
+!INSTALL.md
 !ACEMCP.md
+!LICENSE
+!CHANGELOG.md

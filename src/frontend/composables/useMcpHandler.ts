@@ -20,9 +20,15 @@ export function useMcpHandler() {
    */
   async function handleMcpResponse(response: any) {
     try {
-      // 通过Tauri命令发送响应并退出应用
+      // 通过Tauri命令发送响应
       await invoke('send_mcp_response', { response })
-      await invoke('exit_app')
+
+      if (isWebUiBuild()) {
+        // Web 模式：清除当前请求进入等待状态，不退出
+        mcpRequest.value = null
+      } else {
+        await invoke('exit_app')
+      }
     }
     catch (error) {
       console.error('MCP响应处理失败:', error)
@@ -34,9 +40,15 @@ export function useMcpHandler() {
    */
   async function handleMcpCancel() {
     try {
-      // 发送取消信息并退出应用
+      // 发送取消信息
       await invoke('send_mcp_response', { response: 'CANCELLED' })
-      await invoke('exit_app')
+
+      if (isWebUiBuild()) {
+        // Web 模式：清除当前请求进入等待状态，不退出
+        mcpRequest.value = null
+      } else {
+        await invoke('exit_app')
+      }
     }
     catch (error) {
       // 静默处理MCP取消错误

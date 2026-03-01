@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { setupExitWarningListener } from '../composables/useExitWarning'
 import { useKeyboard } from '../composables/useKeyboard'
@@ -60,6 +61,36 @@ const { versionInfo, showUpdateModal } = useVersionCheck()
 // 弹窗中的设置显示控制
 const showPopupSettings = ref(false)
 
+// Web 模式检测
+const isWebMode = computed(() => typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1)
+
+// 交互历史记录
+const interactionHistory = ref<any[]>([])
+
+// 加载交互历史
+async function loadInteractionHistory() {
+  try {
+    const history = await invoke('get_interaction_history')
+    interactionHistory.value = (history as any[]) || []
+  }
+  catch {
+    interactionHistory.value = []
+  }
+}
+
+// 截断文本
+function truncateText(text: string, maxLen: number): string {
+  if (!text) return ''
+  return text.length > maxLen ? text.substring(0, maxLen) + '...' : text
+}
+
+// 当进入等待状态时加载交互历史
+watch(() => props.mcpRequest, (newReq, oldReq) => {
+  if (!newReq && oldReq && props.showMcpPopup && isWebMode.value) {
+    loadInteractionHistory()
+  }
+})
+
 // 初始化 Naive UI 消息实例
 const message = useMessage()
 
@@ -73,8 +104,6 @@ function togglePopupSettings() {
 
 // 手动处理窗口拖拽
 async function startWindowDrag(event: MouseEvent | TouchEvent) {
-  console.log('[DEBUG] startWindowDrag triggered', event.type)
-  // 如果是按钮等交互元素，不触发拖拽
   // 如果是按钮等交互元素，不触发拖拽
   const target = event.target as HTMLElement
   if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
@@ -148,7 +177,7 @@ onUnmounted(() => {
 
       <!-- 设置界面 -->
       <div
-        v-if="showPopupSettings"
+        v-show="showPopupSettings"
         class="flex-1 overflow-y-auto scrollbar-thin"
       >
         <LayoutWrapper
@@ -166,7 +195,7 @@ onUnmounted(() => {
 
       <!-- 弹窗内容 -->
       <McpPopup
-        v-else
+        v-show="!showPopupSettings"
         :request="props.mcpRequest"
         :app-config="props.appConfig"
         @response="$emit('mcpResponse', $event)"
@@ -175,9 +204,49 @@ onUnmounted(() => {
       />
     </div>
 
+    <!-- Web 模式等待下一个请求 -->
+    <div
+      v-else-if="props.showMcpPopup && !props.mcpRequest && isWebMode"
+      class="flex flex-col w-full h-screen bg-black text-white"
+    >
+      <div class="flex-1 flex flex-col items-center justify-center p-8">
+        <!-- 等待动画 -->
+        <div class="relative mb-6">
+          <div class="w-16 h-16 rounded-full bg-primary-500/10 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-primary-500/20 animate-pulse" />
+          </div>
+        </div>
+        <div class="text-gray-400 text-sm mb-2">已提交，等待下一个请求...</div>
+        <div class="text-gray-600 text-xs mb-8">页面将自动刷新</div>
+
+        <!-- 最近交互记录 -->
+        <div v-if="interactionHistory.length > 0" class="w-full max-w-2xl">
+          <div class="text-xs text-gray-500 uppercase tracking-wider mb-3 text-center">最近交互记录</div>
+          <div class="space-y-2">
+            <div
+              v-for="(item, index) in interactionHistory"
+              :key="index"
+              class="bg-gray-900/50 border border-gray-800 rounded-lg p-3 text-xs"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500 font-mono">{{ item.timestamp }}</span>
+                <span class="text-gray-700 font-mono">#{{ (item.id || '').substring(0, 8) }}</span>
+              </div>
+              <div class="text-gray-400 mb-1">
+                <span class="text-gray-600 mr-1">请求:</span>{{ truncateText(item.message, 120) }}
+              </div>
+              <div class="text-green-400/80">
+                <span class="text-gray-600 mr-1">响应:</span>{{ truncateText(item.response, 120) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 弹窗加载骨架屏 或 初始化骨架屏 -->
     <div
-      v-else-if="props.showMcpPopup || props.isInitializing"
+      v-else-if="(props.showMcpPopup && !isWebMode) || props.isInitializing"
       class="flex flex-col w-full h-screen bg-black text-white"
     >
       <!-- 头部骨架 - 支持拖拽 -->

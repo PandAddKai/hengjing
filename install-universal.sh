@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 恒境 MCP 工具安装脚本 - 支持 macOS、Linux
+# 且慢 MCP 工具安装脚本 - 支持 macOS、Linux
 # 只需要构建和安装两个CLI工具即可运行MCP
 
 set -e
 
-echo "🚀 开始安装 恒境 MCP 工具..."
+echo "🚀 开始安装 且慢 MCP 工具..."
 
 # 检测操作系统
 OS="unknown"
@@ -113,7 +113,7 @@ else
 fi
 
 echo ""
-echo "🎉 恒境 MCP 工具安装完成！"
+echo "🎉 且慢 MCP 工具安装完成！"
 echo ""
 echo "📋 使用方法："
 echo "  💻 MCP 服务器模式:"
@@ -129,7 +129,7 @@ echo ""
 cat << 'EOF'
 {
   "mcpServers": {
-    "恒境": {
+    "且慢": {
       "command": "恒境"
     }
   }
@@ -138,7 +138,7 @@ EOF
 echo ""
 echo "💡 重要说明："
 echo "  • 两个CLI工具必须在同一目录下才能正常工作"
-echo "  • '恒境' 是MCP服务器，'等' 是弹窗界面"
+echo "  • '恒境' 是MCP服务器，'等' 是弹窗界面，'qieman' 是统一入口"
 echo "  • 无需安装完整应用，只需要这两个CLI工具即可"
 echo ""
 

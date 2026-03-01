@@ -1,5 +1,5 @@
 // MCP 服务器入口点
-use continuum::{mcp::run_server, utils::auto_init_logger, log_important};
+use qieman::{mcp::run_server, utils::auto_init_logger, log_important};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

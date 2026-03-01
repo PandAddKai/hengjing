@@ -1,5 +1,7 @@
 use crate::config::load_standalone_telegram_config;
 use crate::telegram::handle_telegram_only_mcp_request;
+use crate::web::server::{handle_web_mode, should_use_web_mode};
+use crate::mcp::types::PopupRequest;
 use crate::log_important;
 use crate::app::builder::run_tauri_app;
 use anyhow::Result;
@@ -42,7 +44,7 @@ pub fn handle_cli_args() -> Result<()> {
 
 /// 处理MCP请求
 fn handle_mcp_request(request_file: &str) -> Result<()> {
-    // 检查Telegram配置，决定是否启用纯Telegram模式
+    // 1. 检查Telegram配置，决定是否启用纯Telegram模式
     match load_standalone_telegram_config() {
         Ok(telegram_config) => {
             if telegram_config.enabled && telegram_config.hide_frontend_popup {
@@ -54,32 +56,62 @@ fn handle_mcp_request(request_file: &str) -> Result<()> {
                     log_important!(error, "处理Telegram请求失败: {}", e);
                     std::process::exit(1);
                 }
-            } else {
-                // 正常模式：启动GUI处理弹窗
-                run_tauri_app();
+                return Ok(());
             }
         }
         Err(e) => {
-            log_important!(warn, "加载Telegram配置失败: {}，使用默认GUI模式", e);
-            // 配置加载失败时，使用默认行为（启动GUI）
-            run_tauri_app();
+            log_important!(warn, "加载Telegram配置失败: {}，继续检测环境", e);
         }
     }
+
+    // 2. 检测是否需要 Web 模式（无图形环境）
+    if should_use_web_mode() {
+        log_important!(info, "检测到无图形环境，启动 Web 模式");
+        return handle_web_mcp_request(request_file);
+    }
+
+    // 3. 正常模式：启动GUI处理弹窗
+    run_tauri_app();
+    Ok(())
+}
+
+/// Web 模式处理 MCP 请求
+fn handle_web_mcp_request(request_file: &str) -> Result<()> {
+    // 读取请求文件
+    let request_json = std::fs::read_to_string(request_file)?;
+    let request: PopupRequest = serde_json::from_str(&request_json)?;
+
+    let rt = tokio::runtime::Runtime::new()?;
+    let result = rt.block_on(handle_web_mode(&request))?;
+
+    // 输出响应到 stdout（MCP 协议要求）
+    println!("{}", result);
+
     Ok(())
 }
 
 /// 显示帮助信息
 fn print_help() {
-    println!("恒境 - 智能代码审查工具");
+    println!("且慢 - 智能代码审查工具 v{}", env!("CARGO_PKG_VERSION"));
     println!();
     println!("用法:");
-    println!("  等                    启动设置界面");
-    println!("  等 --mcp-request <文件>  处理 MCP 请求");
-    println!("  等 --help             显示此帮助信息");
-    println!("  等 --version          显示版本信息");
+    println!("  qieman gui              启动设置界面（GUI）");
+    println!("  qieman serve            启动 MCP 服务器（stdio）");
+    println!("  qieman --mcp-request <文件>  处理单个 MCP 请求");
+    println!("  qieman --help           显示此帮助信息");
+    println!("  qieman --version        显示版本信息");
+    println!();
+    println!("兼容命令:");
+    println!("  等                        等同于 qieman gui");
+    println!("  恒境                      等同于 qieman serve");
+    println!();
+    println!("环境变量:");
+    println!("  QIEMAN_WEB_MODE=1       强制使用 Web 模式");
+    println!("  QIEMAN_WEB_PORT=18963   Web 模式端口（默认 18963）");
+    println!("  QIEMAN_WEB_HOST=0.0.0.0 Web 模式监听地址（默认 127.0.0.1）");
 }
 
 /// 显示版本信息
 fn print_version() {
-    println!("恒境 v{}", env!("CARGO_PKG_VERSION"));
+    println!("且慢 v{}", env!("CARGO_PKG_VERSION"));
 }

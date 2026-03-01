@@ -1,4 +1,4 @@
-# 恒境 🛑
+# 且慢 🛑
 
 > **告别 AI 提前终止烦恼，过程介入交互方式，助力 AI 更加持久**
 
@@ -25,43 +25,43 @@
 ## 📸 效果预览
 
 ### 🛑 智能拦截弹窗
-![恒境弹窗演示](./screenshots/popup.png)
+![且慢弹窗演示](./screenshots/popup.png)
 
 ### 🧠 数学公式显示
 
 ![数学公式显示](./screenshots/math.png)
 
 ### ⚙️ 设置管理界面
-![恒境设置界面](./screenshots/settings.png)
+![且慢设置界面](./screenshots/settings.png)
 
 ## 🚀 安装使用
 
 ### macOS
 
 1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `.dmg` 文件
-2. 将 `恒境.app` 拖入 `/Applications`
+2. 将 `且慢.app` 拖入 `/Applications`
 3. 打开应用，在设置 → CLI 安装中点击"一键安装"
 
 或手动安装 CLI：
 ```bash
-sudo ln -sf /Applications/恒境.app/Contents/MacOS/恒境 /usr/local/bin/恒境
-sudo ln -sf /Applications/恒境.app/Contents/MacOS/等 /usr/local/bin/等
+sudo ln -sf /Applications/且慢.app/Contents/MacOS/恒境 /usr/local/bin/恒境
+sudo ln -sf /Applications/且慢.app/Contents/MacOS/等 /usr/local/bin/等
 ```
 
 ### Windows
 
 1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
-2. 解压到你喜欢的目录，例如 `C:\Program Files\hengjing\`
+2. 解压到你喜欢的目录，例如 `C:\Program Files\qieman\`
 3. 将该目录添加到系统 PATH 环境变量：
    - 右键「此电脑」→「属性」→「高级系统设置」→「环境变量」
    - 在「系统变量」中找到 `Path`，点击「编辑」→「新建」
-   - 添加解压目录路径，如 `C:\Program Files\hengjing`
+   - 添加解压目录路径，如 `C:\Program Files\qieman`
    - 确认保存，重启终端生效
 
 4. 验证安装：
 ```powershell
 # 打开 PowerShell 或 CMD
-恒境.exe --version
+且慢.exe --version
 等.exe
 ```
 
@@ -70,8 +70,8 @@ sudo ln -sf /Applications/恒境.app/Contents/MacOS/等 /usr/local/bin/等
 ```json
 {
   "mcpServers": {
-    "恒境": {
-      "command": "C:\\Program Files\\hengjing\\恒境.exe",
+    "且慢": {
+      "command": "C:\\Program Files\\qieman\\恒境.exe",
       "autoApprove": ["heng"],
       "timeout": 36000000
     }
@@ -79,7 +79,7 @@ sudo ln -sf /Applications/恒境.app/Contents/MacOS/等 /usr/local/bin/等
 }
 ```
 
-> **💡 提示**：如果已添加到 PATH，也可以直接使用 `"command": "恒境.exe"`
+> **💡 提示**：如果已添加到 PATH，也可以直接使用 `"command": "且慢.exe"`
 
 ### Linux
 
@@ -87,8 +87,8 @@ sudo ln -sf /Applications/恒境.app/Contents/MacOS/等 /usr/local/bin/等
 2. 解压并安装：
 ```bash
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-sudo mv 恒境 等 /usr/local/bin/
-sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等
+sudo mv 恒境 等 qieman /usr/local/bin/
+sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等 /usr/local/bin/qieman
 ```
 
 ### 配置 MCP 客户端
@@ -96,7 +96,7 @@ sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等
 ```json
 {
   "mcpServers": {
-    "恒境": {
+    "且慢": {
       "command": "恒境",
       "autoApprove": ["heng"],
       "timeout": 36000000
@@ -136,11 +136,11 @@ pnpm tauri:build
 
 ### Cursor（Remote SSH）首次弹窗停留在“保持此页面打开即可...”
 
-现象：Cursor 第一次调用 MCP 后打开了恒境的等待页，但没有进入可输入的交互界面，导致交互卡住；断开/重连后再次调用才恢复正常。
+现象：Cursor 第一次调用 MCP 后打开了且慢的等待页，但没有进入可输入的交互界面，导致交互卡住；断开/重连后再次调用才恢复正常。
 
 可用绕过：
-- 确保 `等`/恒境 UI 进程未在后台运行（退出后再触发 MCP，让它走“新进程 + --mcp-request 文件”路径）。
-- 清理残留 IPC socket：`rm -f /tmp/hengjing-ui.sock`，再触发一次 MCP。
+- 确保 `等`/且慢 UI 进程未在后台运行（退出后再触发 MCP，让它走“新进程 + --mcp-request 文件”路径）。
+- 清理残留 IPC socket：`rm -f /tmp/qieman-ui.sock`，再触发一次 MCP。
 
 ## 🙏 致谢
 

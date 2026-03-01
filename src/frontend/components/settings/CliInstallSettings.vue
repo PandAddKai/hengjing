@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue'
 
 interface CliInstallStatus {
   installed: boolean
-  hengjing_installed: boolean
+  heng_installed: boolean
   deng_installed: boolean
   install_dir: string
   app_macos_dir: string | null
@@ -128,10 +128,10 @@ onMounted(loadStatus)
         </div>
         <div class="text-xs opacity-60 space-y-1">
           <div class="flex items-center gap-2">
-            <span :class="status.hengjing_installed ? 'text-green-500' : 'text-orange-500'">
-              {{ status.hengjing_installed ? '✓' : '✗' }}
+            <span :class="status.heng_installed ? 'text-green-500' : 'text-orange-500'">
+              {{ status.heng_installed ? '✓' : '✗' }}
             </span>
-            <code class="bg-black/10 dark:bg-white/10 px-1 rounded">恒境</code>
+            <code class="bg-black/10 dark:bg-white/10 px-1 rounded">且慢</code>
             <span class="opacity-60">MCP 服务器</span>
           </div>
           <div class="flex items-center gap-2">

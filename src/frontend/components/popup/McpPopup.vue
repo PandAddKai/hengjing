@@ -169,6 +169,9 @@ async function handleTimeoutAutoSubmit() {
     if (timeoutPromptSource.value === 'continue') {
       promptContent = continuePrompt.value
     }
+    else if (timeoutPromptSource.value === 'recall_heng') {
+      promptContent = '重新调用且慢MCP工具'
+    }
     else if (timeoutPromptSource.value === 'custom' && timeoutCustomPromptId.value) {
       try {
         const config = await invoke('get_custom_prompt_config') as any
@@ -343,12 +346,6 @@ async function handleSubmit() {
   submitting.value = true
 
   try {
-    console.log('[DEBUG] handleSubmit 开始:', {
-      userInput: userInput.value,
-      selectedOptions: selectedOptions.value,
-      draggedImages: draggedImages.value.length,
-    })
-
     // 使用新的结构化数据格式
     const response = {
       user_input: userInput.value.trim() || null,
@@ -369,8 +366,6 @@ async function handleSubmit() {
     if (!response.user_input && response.selected_options.length === 0 && response.images.length === 0) {
       response.user_input = '用户确认继续'
     }
-
-    console.log('[DEBUG] handleSubmit 发送响应:', response)
 
     if (props.mockMode) {
       // 模拟模式下的延迟
@@ -393,7 +388,6 @@ async function handleSubmit() {
 
 // 处理输入更新
 function handleInputUpdate(data: { userInput: string, selectedOptions: string[], draggedImages: string[] }) {
-  console.log('[DEBUG] handleInputUpdate 收到:', data)
   userInput.value = data.userInput
   selectedOptions.value = data.selectedOptions
   draggedImages.value = data.draggedImages
@@ -466,7 +460,7 @@ async function handleEnhance() {
 
   try {
     // 构建增强prompt
-    const enhancePrompt = `Use the following prompt to optimize and enhance the context of the content in 《》, and return the enhanced result by calling the tool '恒境' after completion.Here is an instruction that I'd like to give you, but it needs to be improved. Rewrite and enhance this instruction to make it clearer, more specific, less ambiguous, and correct any mistakes. Reply immediately with your answer, even if you're not sure. Consider the context of our conversation history when enhancing the prompt. Reply with the following format:
+    const enhancePrompt = `Use the following prompt to optimize and enhance the context of the content in 《》, and return the enhanced result by calling the tool '且慢' after completion.Here is an instruction that I'd like to give you, but it needs to be improved. Rewrite and enhance this instruction to make it clearer, more specific, less ambiguous, and correct any mistakes. Reply immediately with your answer, even if you're not sure. Consider the context of our conversation history when enhancing the prompt. Reply with the following format:
 
 ### BEGIN RESPONSE ###
 Here is an enhanced version of the original instruction that is more specific and clear:

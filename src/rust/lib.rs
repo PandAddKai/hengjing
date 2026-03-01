@@ -6,6 +6,7 @@ pub mod mcp;
 pub mod telegram;
 pub mod ui;
 pub mod utils;
+pub mod web;
 
 // 避免重名导出，使用限定导出
 pub use config::*;

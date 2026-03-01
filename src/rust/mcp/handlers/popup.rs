@@ -5,11 +5,14 @@ use std::path::Path;
 
 use crate::mcp::types::PopupRequest;
 use crate::ipc::{IpcRequest, client::IpcClient};
+use crate::web::server::{should_use_web_mode, handle_web_mode};
 use crate::log_important;
 
 /// 创建 Tauri 弹窗
 ///
-/// 优先通过 IPC 发送到已运行的 UI，失败则启动新进程
+/// 优先通过 IPC 发送到已运行的 UI，
+/// 无图形环境时使用 Web 模式，
+/// 最后回退到启动新进程
 pub async fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
     // 尝试通过 IPC 发送到已运行的 UI
     let ipc_request = IpcRequest::from(request);
@@ -25,12 +28,18 @@ pub async fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
                 return Ok(response);
             }
             Err(e) => {
-                log_important!(warn, "IPC 请求失败: {}，回退到启动新进程", e);
+                log_important!(warn, "IPC 请求失败: {}，回退到其他模式", e);
             }
         }
     }
 
-    // IPC 失败或 UI 未运行，启动新进程（同步阻塞操作，放到 spawn_blocking 中）
+    // 检测是否需要 Web 模式（无图形环境或强制启用）
+    if should_use_web_mode() {
+        log_important!(info, "检测到无图形环境，使用 Web 模式");
+        return handle_web_mode(request).await;
+    }
+
+    // IPC 失败且有图形环境，启动新进程（同步阻塞操作，放到 spawn_blocking 中）
     log_important!(info, "启动新的 UI 进程");
     let request_clone = request.clone();
     tokio::task::spawn_blocking(move || create_new_ui_process(&request_clone))
@@ -39,11 +48,16 @@ pub async fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
 
 /// 启动新的 UI 进程处理请求
 fn create_new_ui_process(request: &PopupRequest) -> Result<String> {
-    // 创建临时请求文件 - 跨平台适配
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join(format!("mcp_request_{}.json", request.id));
     let request_json = serde_json::to_string_pretty(request)?;
-    fs::write(&temp_file, request_json)?;
+    fs::write(&temp_file, &request_json)?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = fs::set_permissions(&temp_file, fs::Permissions::from_mode(0o600));
+    }
 
     // 尝试找到等命令的路径
     let command_path = find_ui_command()?;

@@ -13,6 +13,8 @@ pub struct IpcClient;
 
 impl IpcClient {
     /// 检查 UI 是否已经在运行（通过尝试连接 socket）
+    ///
+    /// 如果 socket 文件存在但连接失败（进程已崩溃），自动清理残留文件
     pub async fn is_ui_running() -> bool {
         let socket_path = get_socket_path();
         
@@ -24,13 +26,16 @@ impl IpcClient {
             
             match tokio::net::UnixStream::connect(&socket_path).await {
                 Ok(_) => true,
-                Err(_) => false,
+                Err(_) => {
+                    let _ = std::fs::remove_file(&socket_path);
+                    false
+                }
             }
         }
         
         #[cfg(windows)]
         {
-            false // Windows 暂时返回 false，需要额外实现
+            false
         }
     }
     

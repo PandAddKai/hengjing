@@ -3,24 +3,28 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use crate::constants::{window, theme, audio, mcp, telegram, font};
 
+pub const CURRENT_CONFIG_VERSION: u32 = 1;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AppConfig {
+    #[serde(default)]
+    pub config_version: u32,
     #[serde(default = "default_ui_config")]
-    pub ui_config: UiConfig, // UI相关配置（主题、窗口、置顶等）
+    pub ui_config: UiConfig,
     #[serde(default = "default_audio_config")]
-    pub audio_config: AudioConfig, // 音频相关配置
+    pub audio_config: AudioConfig,
     #[serde(default = "default_reply_config")]
-    pub reply_config: ReplyConfig, // 继续回复配置
+    pub reply_config: ReplyConfig,
     #[serde(default = "default_mcp_config")]
-    pub mcp_config: McpConfig, // MCP工具配置
+    pub mcp_config: McpConfig,
     #[serde(default = "default_telegram_config")]
-    pub telegram_config: TelegramConfig, // Telegram Bot配置
+    pub telegram_config: TelegramConfig,
     #[serde(default = "default_timeout_auto_submit_config")]
-    pub timeout_auto_submit_config: TimeoutAutoSubmitConfig, // 超时自动提交配置
+    pub timeout_auto_submit_config: TimeoutAutoSubmitConfig,
     #[serde(default = "default_custom_prompt_config")]
-    pub custom_prompt_config: CustomPromptConfig, // 自定义prompt配置
+    pub custom_prompt_config: CustomPromptConfig,
     #[serde(default = "default_shortcut_config")]
-    pub shortcut_config: ShortcutConfig, // 自定义快捷键配置
+    pub shortcut_config: ShortcutConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -186,7 +190,7 @@ pub struct TimeoutAutoSubmitConfig {
     #[serde(default = "default_timeout_auto_submit_seconds")]
     pub timeout_seconds: u32,
     #[serde(default = "default_timeout_auto_submit_prompt_source")]
-    pub prompt_source: String, // "continue" | "custom" | "manual"
+    pub prompt_source: String, // "continue" | "custom" | "manual" | "recall_heng"
     #[serde(default)]
     pub custom_prompt_id: Option<String>,
     #[serde(default = "default_timeout_auto_submit_manual_prompt")]
@@ -219,6 +223,7 @@ pub struct AppState {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
+            config_version: CURRENT_CONFIG_VERSION,
             ui_config: default_ui_config(),
             audio_config: default_audio_config(),
             reply_config: default_reply_config(),
@@ -362,7 +367,7 @@ pub fn default_continue_prompt() -> String {
 
 pub fn default_mcp_tools() -> HashMap<String, bool> {
     let mut tools = HashMap::new();
-    tools.insert(mcp::TOOL_HENG.to_string(), true); // 恒境工具默认启用
+    tools.insert(mcp::TOOL_HENG.to_string(), true); // 且慢工具默认启用
     tools.insert(mcp::TOOL_JI.to_string(), false); // 记忆管理工具默认关闭
     tools.insert(mcp::TOOL_SOU.to_string(), false); // 代码搜索工具默认关闭
     tools
@@ -554,7 +559,7 @@ pub fn default_custom_prompts() -> Vec<CustomPrompt> {
             id: "default_4".to_string(),
             name: "🧠Remember".to_string(),
             content: "请记住，".to_string(),
-            description: Some("恒境的另一个工具，请记住".to_string()),
+            description: Some("且慢的另一个工具，请记住".to_string()),
             sort_order: 4,
             created_at: chrono::Utc::now().to_rfc3339(),
             updated_at: chrono::Utc::now().to_rfc3339(),
@@ -581,7 +586,7 @@ pub fn default_custom_prompts() -> Vec<CustomPrompt> {
         CustomPrompt {
             id: "default_6".to_string(),
             name: "🔍Review And Plan".to_string(),
-            content: "请执行以下项目进度检查和规划任务：\n\n1. **项目进度分析**：\n   - 查看当前代码库状态，分析已完成的功能模块\n   - 识别已完成、进行中和待开始的功能点\n\n2. **里程碑确定**：\n   - 基于当前进度和剩余工作量，定义清晰的里程碑节点\n   - 为每个里程碑设定具体的完成标准和时间预期\n   - 优先考虑核心任务管理功能的里程碑\n\n3. **文档更新**（注意：仅更新现有文档，不创建新文档）：\n   - 更新项目规划文档中的进度状态\n   - 修正任何与实际实现不符的技术方案描述\n   - 确保文档反映当前的技术栈和架构决策\n\n4. **下一步工作规划**：\n   - 基于用户偏好（系统化开发方法、前端优先、分步骤反馈）制定具体的下一阶段工作计划\n   - 识别关键路径上的阻塞点和依赖关系\n   - 提供3-5个具体的下一步行动项，按优先级排序\n\n5. **反馈收集**：\n   - 在完成分析后，使用恒境工具收集用户对进度评估和下一步计划的反馈\n   - 提供多个可选的发展方向供用户选择".to_string(),
+            content: "请执行以下项目进度检查和规划任务：\n\n1. **项目进度分析**：\n   - 查看当前代码库状态，分析已完成的功能模块\n   - 识别已完成、进行中和待开始的功能点\n\n2. **里程碑确定**：\n   - 基于当前进度和剩余工作量，定义清晰的里程碑节点\n   - 为每个里程碑设定具体的完成标准和时间预期\n   - 优先考虑核心任务管理功能的里程碑\n\n3. **文档更新**（注意：仅更新现有文档，不创建新文档）：\n   - 更新项目规划文档中的进度状态\n   - 修正任何与实际实现不符的技术方案描述\n   - 确保文档反映当前的技术栈和架构决策\n\n4. **下一步工作规划**：\n   - 基于用户偏好（系统化开发方法、前端优先、分步骤反馈）制定具体的下一阶段工作计划\n   - 识别关键路径上的阻塞点和依赖关系\n   - 提供3-5个具体的下一步行动项，按优先级排序\n\n5. **反馈收集**：\n   - 在完成分析后，使用且慢工具收集用户对进度评估和下一步计划的反馈\n   - 提供多个可选的发展方向供用户选择".to_string(),
             description: Some("项目进度检查和规划任务".to_string()),
             sort_order: 6,
             created_at: chrono::Utc::now().to_rfc3339(),

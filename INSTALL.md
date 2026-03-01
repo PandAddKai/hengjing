@@ -1,26 +1,24 @@
-# 恒境 MCP 工具安装指南
+# 且慢 MCP 工具安装指南
 
 ## 快速安装
 
 ### 方式一：使用安装脚本（推荐）
 
 ```bash
-# 克隆仓库
-git clone https://github.com/imhuso/continuum.git
-cd continuum
+git clone https://github.com/KerwinKoo/hengjing.git
+cd hengjing
 
-# 运行安装脚本
 chmod +x install.sh
 ./install.sh
 ```
 
 ### 方式二：下载预编译版本
 
-从 [Releases](https://github.com/imhuso/continuum/releases) 页面下载对应平台的预编译版本：
+从 [Releases](https://github.com/KerwinKoo/hengjing/releases) 页面下载对应平台的预编译版本：
 
-- **Linux**: `continuum-linux-x86_64.tar.gz`
-- **macOS**: `continuum-macos-universal.tar.gz`
-- **Windows**: `continuum-windows-x86_64.zip`
+- **Linux**: `continuum-cli-*-linux-x86_64.tar.gz`
+- **macOS**: `continuum-cli-*-macos-universal.tar.gz`
+- **Windows**: `continuum-cli-*-windows-x86_64.zip`
 
 #### 安装步骤：
 
@@ -30,22 +28,15 @@ chmod +x install.sh
 
 ```bash
 # Linux/macOS 示例
-tar -xzf continuum-linux-x86_64.tar.gz
-sudo cp 等一下 恒境 /usr/local/bin/
-```
-
-```powershell
-# Windows 示例
-# 解压 zip 文件到 C:\continuum
-# 将 C:\continuum 添加到系统 PATH
+tar -xzf continuum-cli-*-linux-x86_64.tar.gz
+cp 等 恒境 qieman ~/.local/bin/
 ```
 
 ## 验证安装
 
 ```bash
-# 检查工具是否正确安装
+qieman --help
 恒境 --help
-等一下 --help
 ```
 
 ## MCP 客户端配置
@@ -55,7 +46,7 @@ sudo cp 等一下 恒境 /usr/local/bin/
 ```json
 {
   "mcpServers": {
-    "恒境": {
+    "且慢": {
       "command": "恒境"
     }
   }
@@ -64,21 +55,24 @@ sudo cp 等一下 恒境 /usr/local/bin/
 
 ## 使用方法
 
-### MCP 服务器模式
+### 统一入口（推荐）
 ```bash
-恒境  # 启动 MCP 服务器
+qieman gui              # 启动设置界面
+qieman serve            # 启动 MCP 服务器
+qieman --mcp-request <文件>  # 处理单个 MCP 请求
 ```
 
-### 弹窗界面模式
+### 兼容命令
 ```bash
-等一下                          # 启动设置界面
-等一下 --mcp-request file       # MCP 弹窗模式
+恒境                      # 等同于 qieman serve
+等                        # 等同于 qieman gui
 ```
 
 ## 工具说明
 
-- **恒境**: MCP 服务器，提供记忆管理和智能交互功能
-- **等一下**: 弹窗界面，用于用户交互和设置
+- **qieman**: 统一入口，支持 gui/serve 子命令
+- **恒境**: MCP 服务器（向后兼容）
+- **等**: GUI 设置界面（向后兼容）
 
 ## 系统要求
 
@@ -90,19 +84,16 @@ sudo cp 等一下 恒境 /usr/local/bin/
 
 ### 权限问题
 ```bash
-# Linux/macOS
-chmod +x 等一下 恒境
+chmod +x qieman 等 恒境
 ```
 
 ### PATH 问题
 确保安装目录已添加到 PATH 环境变量中。
 
 ### 依赖问题
-两个 CLI 工具必须在同一目录下才能正常工作。
+三个 CLI 工具必须在同一目录下才能正常工作。
 
 ## 开发者安装
-
-如果您想从源码构建：
 
 ```bash
 # 安装依赖
@@ -115,7 +106,7 @@ pnpm build
 cargo build --release
 
 # 安装
-cp target/release/等一下 target/release/恒境 ~/.local/bin/
+cp target/release/{qieman,等,恒境} ~/.local/bin/
 ```
 
 ## 更新
@@ -126,5 +117,7 @@ cp target/release/等一下 target/release/恒境 ~/.local/bin/
 ### 使用源码
 ```bash
 git pull
-./install.sh
+pnpm build
+cargo build --release
+cp target/release/{qieman,等,恒境} ~/.local/bin/
 ```

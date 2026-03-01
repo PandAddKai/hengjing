@@ -6,15 +6,22 @@ use rmcp::{
     service::RequestContext,
 };
 use std::collections::HashMap;
+use std::sync::Mutex;
+use std::time::SystemTime;
 
 use super::tools::{InteractionTool, MemoryTool, AcemcpTool};
 use super::types::{HengRequest, JiyiRequest};
-use crate::config::load_standalone_config;
+use crate::config::{load_standalone_config, get_standalone_config_path};
 use crate::{log_important, log_debug};
+
+struct ConfigCache {
+    tools: HashMap<String, bool>,
+    last_mtime: Option<SystemTime>,
+}
 
 #[derive(Clone)]
 pub struct HengServer {
-    enabled_tools: HashMap<String, bool>,
+    cache: std::sync::Arc<Mutex<ConfigCache>>,
 }
 
 impl Default for HengServer {
@@ -25,33 +32,54 @@ impl Default for HengServer {
 
 impl HengServer {
     pub fn new() -> Self {
-        // 尝试加载配置，如果失败则使用默认配置
-        let enabled_tools = match load_standalone_config() {
+        let tools = match load_standalone_config() {
             Ok(config) => config.mcp_config.tools,
             Err(e) => {
                 log_important!(warn, "无法加载配置文件，使用默认工具配置: {}", e);
                 crate::config::default_mcp_tools()
             }
         };
+        let mtime = get_standalone_config_path()
+            .ok()
+            .and_then(|p| p.metadata().ok())
+            .and_then(|m| m.modified().ok());
 
-        Self { enabled_tools }
+        Self {
+            cache: std::sync::Arc::new(Mutex::new(ConfigCache {
+                tools,
+                last_mtime: mtime,
+            })),
+        }
     }
 
-    /// 检查工具是否启用 - 动态读取最新配置
     fn is_tool_enabled(&self, tool_name: &str) -> bool {
-        // 每次都重新读取配置，确保获取最新状态
-        match load_standalone_config() {
-            Ok(config) => {
-                let enabled = config.mcp_config.tools.get(tool_name).copied().unwrap_or(true);
-                log_debug!("工具 {} 当前状态: {}", tool_name, enabled);
-                enabled
-            }
-            Err(e) => {
-                log_important!(warn, "读取配置失败，使用缓存状态: {}", e);
-                // 如果读取失败，使用缓存的配置
-                self.enabled_tools.get(tool_name).copied().unwrap_or(true)
+        let mut cache = self.cache.lock().unwrap();
+
+        let current_mtime = get_standalone_config_path()
+            .ok()
+            .and_then(|p| p.metadata().ok())
+            .and_then(|m| m.modified().ok());
+
+        let needs_reload = match (cache.last_mtime, current_mtime) {
+            (Some(cached), Some(current)) => current != cached,
+            (None, Some(_)) => true,
+            _ => false,
+        };
+
+        if needs_reload {
+            match load_standalone_config() {
+                Ok(config) => {
+                    log_debug!("配置文件已变更，重新加载");
+                    cache.tools = config.mcp_config.tools;
+                    cache.last_mtime = current_mtime;
+                }
+                Err(e) => {
+                    log_important!(warn, "重新加载配置失败，使用缓存: {}", e);
+                }
             }
         }
+
+        cache.tools.get(tool_name).copied().unwrap_or(true)
     }
 }
 
@@ -61,10 +89,10 @@ impl ServerHandler for HengServer {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation {
-                name: "Heng-mcp".to_string(),
+                name: "qieman-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             },
-            instructions: Some("恒境智能代码审查工具，支持交互式对话和记忆管理".to_string()),
+            instructions: Some("且慢智能代码审查工具，支持交互式对话和记忆管理".to_string()),
         }
     }
 
@@ -86,7 +114,7 @@ impl ServerHandler for HengServer {
 
         let mut tools = Vec::new();
 
-        // 恒境工具始终可用（必需工具）
+        // 且慢工具始终可用（必需工具）
         let heng_schema = serde_json::json!({
             "type": "object",
             "properties": {
@@ -181,7 +209,7 @@ impl ServerHandler for HengServer {
                 let heng_request: HengRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
-                // 调用恒境工具
+                // 调用且慢工具
                 InteractionTool::heng(heng_request).await
             }
             "ji" => {

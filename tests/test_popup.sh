@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 恒境弹窗测试脚本
+# 且慢弹窗测试脚本
 # 使用 target/release 中的 CLI 工具测试弹窗功能
 
 set -e
@@ -20,7 +20,7 @@ BUILD_TYPE="release"
 CLI_TYPE="local"  # local 或 global
 CLI_PATH="$PROJECT_ROOT/target/$BUILD_TYPE"
 
-echo -e "${BLUE}🎯 恒境弹窗测试脚本${NC}"
+echo -e "${BLUE}🎯 且慢弹窗测试脚本${NC}"
 echo -e "${BLUE}================================${NC}"
 
 # 选择CLI类型
@@ -94,12 +94,12 @@ check_global_cli() {
     local continuum_found=false
     local dengxiaxia_found=false
 
-    # 检查恒境
+    # 检查恒境 (MCP 服务器)
     if command -v 恒境 &> /dev/null; then
         echo -e "${GREEN}✅ 找到全局 恒境 CLI: $(which 恒境)${NC}"
         continuum_found=true
     else
-        echo -e "${RED}❌ 未找到全局 恒境 CLI${NC}"
+        echo -e "${RED}❌ 未找到全局 恒境 CLI (可尝试 qieman)${NC}"
     fi
 
     # 检查等

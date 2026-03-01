@@ -1,5 +1,5 @@
-use continuum::app::{handle_cli_args, run_tauri_app};
-use continuum::utils::auto_init_logger;
+use qieman::app::{handle_cli_args, run_tauri_app};
+use qieman::utils::auto_init_logger;
 use anyhow::Result;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
