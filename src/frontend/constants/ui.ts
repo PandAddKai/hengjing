@@ -61,8 +61,9 @@ export const REPLY_CONFIG = {
 
 // MCP 工具常量
 export const MCP_TOOLS = {
-  heng: 'heng',
+  qieman: 'qieman',
   ji: 'ji',
+  sou: 'sou',
 } as const
 
 // 字体大小常量
