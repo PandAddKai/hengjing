@@ -1,12 +1,12 @@
 {
   "name": "qieman",
   "type": "module",
-  "version": "6.5.0",
+  "version": "6.5.1",
   "description": "且慢 - AI 交互确认助手",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KerwinKoo/hengjing"
+    "url": "https://github.com/PandAddKai/hengjing"
   },
   "packageManager": "pnpm@10.12.1",
   "scripts": {

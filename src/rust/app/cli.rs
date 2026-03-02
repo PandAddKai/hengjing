@@ -101,10 +101,6 @@ fn print_help() {
     println!("  qieman --help           显示此帮助信息");
     println!("  qieman --version        显示版本信息");
     println!();
-    println!("兼容命令:");
-    println!("  等                        等同于 qieman gui");
-    println!("  恒境                      等同于 qieman serve");
-    println!();
     println!("环境变量:");
     println!("  QIEMAN_WEB_MODE=1       强制使用 Web 模式");
     println!("  QIEMAN_WEB_PORT=18963   Web 模式端口（默认 18963）");

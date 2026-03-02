@@ -29,7 +29,7 @@ pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
     log::info!("📡 发送 GitHub API 请求");
     
     let response = client
-        .get("https://api.github.com/repos/KerwinKoo/hengjing/releases/latest")
+        .get("https://api.github.com/repos/PandAddKai/hengjing/releases/latest")
         .header("User-Agent", "qieman-app/1.0")
         .header("Accept", "application/vnd.github.v3+json")
         .timeout(std::time::Duration::from_secs(30))
@@ -579,9 +579,9 @@ fn find_executable_in_dir(dir: &PathBuf) -> Result<PathBuf, String> {
         if let Some(file_name) = file.file_name().and_then(|n| n.to_str()) {
             log::info!("📄 检查文件: {} (路径: {})", file_name, file.display());
 
-            // 查找名为 "等" 或 "continuum" 的可执行文件
-            if file_name == "等" || file_name == "continuum" ||
-               file_name == "等.exe" || file_name == "continuum.exe" ||
+            // 查找名为 "qieman" 或 "continuum" 的可执行文件
+            if file_name == "qieman" || file_name == "continuum" ||
+               file_name == "qieman.exe" || file_name == "continuum.exe" ||
                file_name.starts_with("continuum") && !file_name.ends_with(".tar.gz") {
                 log::info!("✅ 找到目标可执行文件: {}", file_name);
                 return Ok(file.clone());

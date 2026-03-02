@@ -3495,7 +3495,7 @@ dependencies = [
 
 [[package]]
 name = "qieman"
-version = "6.4.3"
+version = "6.5.1"
 dependencies = [
  "anyhow",
  "axum",

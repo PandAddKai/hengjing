@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { ref } from 'vue'
 
 function isWebUiBuild(): boolean {
-  return typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1
+  return typeof window !== 'undefined' && (window as any).__QIEMAN_WEB_BUILD__ === 1
 }
 
 /**

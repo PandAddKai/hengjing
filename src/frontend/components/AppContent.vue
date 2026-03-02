@@ -62,7 +62,7 @@ const { versionInfo, showUpdateModal } = useVersionCheck()
 const showPopupSettings = ref(false)
 
 // Web 模式检测
-const isWebMode = computed(() => typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1)
+const isWebMode = computed(() => typeof window !== 'undefined' && (window as any).__QIEMAN_WEB_BUILD__ === 1)
 
 // 交互历史记录
 const interactionHistory = ref<any[]>([])

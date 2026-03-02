@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use std::time::SystemTime;
 
 use super::tools::{InteractionTool, MemoryTool, AcemcpTool};
-use super::types::{HengRequest, JiyiRequest};
+use super::types::{QiemanRequest, JiyiRequest};
 use crate::config::{load_standalone_config, get_standalone_config_path};
 use crate::{log_important, log_debug};
 
@@ -20,17 +20,17 @@ struct ConfigCache {
 }
 
 #[derive(Clone)]
-pub struct HengServer {
+pub struct QiemanServer {
     cache: std::sync::Arc<Mutex<ConfigCache>>,
 }
 
-impl Default for HengServer {
+impl Default for QiemanServer {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl HengServer {
+impl QiemanServer {
     pub fn new() -> Self {
         let tools = match load_standalone_config() {
             Ok(config) => config.mcp_config.tools,
@@ -83,7 +83,7 @@ impl HengServer {
     }
 }
 
-impl ServerHandler for HengServer {
+impl ServerHandler for QiemanServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2024_11_05,
@@ -115,7 +115,7 @@ impl ServerHandler for HengServer {
         let mut tools = Vec::new();
 
         // 且慢工具始终可用（必需工具）
-        let heng_schema = serde_json::json!({
+        let qieman_schema = serde_json::json!({
             "type": "object",
             "properties": {
                 "message": {
@@ -135,9 +135,9 @@ impl ServerHandler for HengServer {
             "required": ["message"]
         });
 
-        if let serde_json::Value::Object(schema_map) = heng_schema {
+        if let serde_json::Value::Object(schema_map) = qieman_schema {
             tools.push(Tool {
-                name: Cow::Borrowed("heng"),
+                name: Cow::Borrowed("qieman"),
                 description: Some(Cow::Borrowed("智能代码审查交互工具，支持预定义选项、自由文本输入和图片上传")),
                 input_schema: Arc::new(schema_map),
                 annotations: None,
@@ -200,17 +200,17 @@ impl ServerHandler for HengServer {
         log_debug!("收到工具调用请求: {}", request.name);
 
         match request.name.as_ref() {
-            "heng" => {
+            "qieman" => {
                 // 解析请求参数
                 let arguments_value = request.arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
-                let heng_request: HengRequest = serde_json::from_value(arguments_value)
+                let qieman_request: QiemanRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
                 // 调用且慢工具
-                InteractionTool::heng(heng_request).await
+                InteractionTool::qieman(qieman_request).await
             }
             "ji" => {
                 // 检查记忆管理工具是否启用
@@ -268,7 +268,7 @@ impl ServerHandler for HengServer {
 /// 启动MCP服务器
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     // 创建并运行服务器
-    let service = HengServer::new()
+    let service = QiemanServer::new()
         .serve(stdio())
         .await
         .inspect_err(|e| {

@@ -42,12 +42,10 @@ pnpm build
 Write-Host "🔨 构建二进制文件..." -ForegroundColor Yellow
 cargo build --release
 
-# 检查构建结果 (qieman 为主入口，等 为 GUI，恒境 为 MCP 服务器)
+# 检查构建结果
 $QiemanPath = "target\release\qieman.exe"
-$DengPath = "target\release\等.exe"
-$HengPath = "target\release\恒境.exe"
-if (-not (Test-Path $QiemanPath) -or -not (Test-Path $DengPath) -or -not (Test-Path $HengPath)) {
-    Write-Host "❌ 二进制文件构建失败，需要: qieman.exe, 等.exe, 恒境.exe" -ForegroundColor Red
+if (-not (Test-Path $QiemanPath)) {
+    Write-Host "❌ 二进制文件构建失败，需要: qieman.exe" -ForegroundColor Red
     exit 1
 }
 
@@ -74,23 +72,17 @@ New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
 
 # 复制二进制文件
 $MainExe = "$BinDir\qieman.exe"
-$UiExe = "$BinDir\等.exe"
-$McpExe = "$BinDir\恒境.exe"
 
 Write-Host "📋 安装二进制文件..." -ForegroundColor Yellow
 Copy-Item $QiemanPath $MainExe -Force
-Copy-Item $DengPath $UiExe -Force
-Copy-Item $HengPath $McpExe -Force
 
 Write-Host "✅ 二进制文件已安装到: $BinDir" -ForegroundColor Green
-
-# 图标已移除，不再需要复制
 
 # 检查PATH环境变量
 $CurrentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($CurrentPath -notlike "*$BinDir*") {
     Write-Host "🔧 添加到用户 PATH 环境变量..." -ForegroundColor Yellow
-    
+
     try {
         $NewPath = if ($CurrentPath) { "$CurrentPath;$BinDir" } else { $BinDir }
         [Environment]::SetEnvironmentVariable("PATH", $NewPath, "User")
@@ -114,7 +106,6 @@ try {
     $Shortcut.TargetPath = $MainExe
     $Shortcut.WorkingDirectory = $InstallDir
     $Shortcut.Description = "且慢 - AI 交互确认助手，助力AI持续交互"
-    # 图标已移除，使用默认图标
     $Shortcut.Save()
     Write-Host "✅ 开始菜单快捷方式已创建" -ForegroundColor Green
 }
@@ -123,4 +114,12 @@ catch {
 }
 
 Write-Host ""
-Write-Host "
+Write-Host "🎉 且慢 安装完成！" -ForegroundColor Green
+Write-Host ""
+Write-Host "📋 使用方法：" -ForegroundColor Cyan
+Write-Host "  qieman serve              - 启动 MCP 服务器"
+Write-Host "  qieman gui                - 启动设置界面"
+Write-Host "  qieman --mcp-request file - MCP 弹窗模式"
+Write-Host ""
+Write-Host "📝 MCP 客户端配置：" -ForegroundColor Cyan
+Write-Host '{"mcpServers": {"且慢": {"command": "qieman", "args": ["serve"]}}}'

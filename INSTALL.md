@@ -5,7 +5,7 @@
 ### 方式一：使用安装脚本（推荐）
 
 ```bash
-git clone https://github.com/KerwinKoo/hengjing.git
+git clone https://github.com/PandAddKai/hengjing.git
 cd hengjing
 
 chmod +x install.sh
@@ -14,7 +14,7 @@ chmod +x install.sh
 
 ### 方式二：下载预编译版本
 
-从 [Releases](https://github.com/KerwinKoo/hengjing/releases) 页面下载对应平台的预编译版本：
+从 [Releases](https://github.com/PandAddKai/hengjing/releases) 页面下载对应平台的预编译版本：
 
 - **Linux**: `continuum-cli-*-linux-x86_64.tar.gz`
 - **macOS**: `continuum-cli-*-macos-universal.tar.gz`
@@ -29,14 +29,13 @@ chmod +x install.sh
 ```bash
 # Linux/macOS 示例
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-cp 等 恒境 qieman ~/.local/bin/
+cp qieman ~/.local/bin/
 ```
 
 ## 验证安装
 
 ```bash
 qieman --help
-恒境 --help
 ```
 
 ## MCP 客户端配置
@@ -47,7 +46,8 @@ qieman --help
 {
   "mcpServers": {
     "且慢": {
-      "command": "恒境"
+      "command": "qieman",
+      "args": ["serve"]
     }
   }
 }
@@ -55,24 +55,15 @@ qieman --help
 
 ## 使用方法
 
-### 统一入口（推荐）
 ```bash
 qieman gui              # 启动设置界面
 qieman serve            # 启动 MCP 服务器
 qieman --mcp-request <文件>  # 处理单个 MCP 请求
 ```
 
-### 兼容命令
-```bash
-恒境                      # 等同于 qieman serve
-等                        # 等同于 qieman gui
-```
-
 ## 工具说明
 
 - **qieman**: 统一入口，支持 gui/serve 子命令
-- **恒境**: MCP 服务器（向后兼容）
-- **等**: GUI 设置界面（向后兼容）
 
 ## 系统要求
 
@@ -84,14 +75,11 @@ qieman --mcp-request <文件>  # 处理单个 MCP 请求
 
 ### 权限问题
 ```bash
-chmod +x qieman 等 恒境
+chmod +x qieman
 ```
 
 ### PATH 问题
 确保安装目录已添加到 PATH 环境变量中。
-
-### 依赖问题
-三个 CLI 工具必须在同一目录下才能正常工作。
 
 ## 开发者安装
 
@@ -106,7 +94,7 @@ pnpm build
 cargo build --release
 
 # 安装
-cp target/release/{qieman,等,恒境} ~/.local/bin/
+cp target/release/qieman ~/.local/bin/
 ```
 
 ## 更新
@@ -119,5 +107,5 @@ cp target/release/{qieman,等,恒境} ~/.local/bin/
 git pull
 pnpm build
 cargo build --release
-cp target/release/{qieman,等,恒境} ~/.local/bin/
+cp target/release/qieman ~/.local/bin/
 ```

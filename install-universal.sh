@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 且慢 MCP 工具安装脚本 - 支持 macOS、Linux
-# 只需要构建和安装两个CLI工具即可运行MCP
+# 只需要构建和安装 qieman CLI 工具即可运行 MCP
 
 set -e
 
@@ -58,7 +58,7 @@ export CXX="${CXX:-/usr/bin/g++}"
 cargo build --release
 
 # 检查构建结果
-if [[ ! -f "target/release/等" ]] || [[ ! -f "target/release/恒境" ]]; then
+if [[ ! -f "target/release/qieman" ]]; then
     echo "❌ CLI 工具构建失败"
     echo "请检查构建错误并重试"
     exit 1
@@ -74,10 +74,8 @@ if [[ "$OS" == "macos" ]]; then
     INSTALL_DIR="/usr/local/bin"
 
     echo "📋 安装 CLI 工具到 $INSTALL_DIR..."
-    sudo cp "target/release/等" "$INSTALL_DIR/"
-    sudo cp "target/release/恒境" "$INSTALL_DIR/"
-    sudo chmod +x "$INSTALL_DIR/等"
-    sudo chmod +x "$INSTALL_DIR/恒境"
+    sudo cp "target/release/qieman" "$INSTALL_DIR/"
+    sudo chmod +x "$INSTALL_DIR/qieman"
 
     echo "✅ CLI 工具已安装到 $INSTALL_DIR"
 
@@ -91,10 +89,8 @@ elif [[ "$OS" == "linux" ]]; then
     mkdir -p "$BIN_DIR"
 
     # 复制CLI工具
-    cp "target/release/等" "$BIN_DIR/"
-    cp "target/release/恒境" "$BIN_DIR/"
-    chmod +x "$BIN_DIR/等"
-    chmod +x "$BIN_DIR/恒境"
+    cp "target/release/qieman" "$BIN_DIR/"
+    chmod +x "$BIN_DIR/qieman"
 
     echo "✅ CLI 工具已安装到 $BIN_DIR"
 
@@ -117,11 +113,11 @@ echo "🎉 且慢 MCP 工具安装完成！"
 echo ""
 echo "📋 使用方法："
 echo "  💻 MCP 服务器模式:"
-echo "    恒境                            - 启动 MCP 服务器"
+echo "    qieman serve                    - 启动 MCP 服务器"
 echo ""
-echo "  🎨 弹窗界面模式:"
-echo "    等                              - 启动设置界面"
-echo "    等 --mcp-request file           - MCP 弹窗模式"
+echo "  🎨 GUI 模式:"
+echo "    qieman gui                      - 启动设置界面"
+echo "    qieman --mcp-request file       - MCP 弹窗模式"
 echo ""
 echo "📝 配置 MCP 客户端："
 echo "将以下内容添加到您的 MCP 客户端配置中："
@@ -130,16 +126,17 @@ cat << 'EOF'
 {
   "mcpServers": {
     "且慢": {
-      "command": "恒境"
+      "command": "qieman",
+      "args": ["serve"]
     }
   }
 }
 EOF
 echo ""
 echo "💡 重要说明："
-echo "  • 两个CLI工具必须在同一目录下才能正常工作"
-echo "  • '恒境' 是MCP服务器，'等' 是弹窗界面，'qieman' 是统一入口"
-echo "  • 无需安装完整应用，只需要这两个CLI工具即可"
+echo "  • qieman 是唯一的二进制入口"
+echo "  • 使用 'qieman serve' 启动 MCP 服务器"
+echo "  • 使用 'qieman gui' 启动设置界面"
 echo ""
 
 if [[ "$OS" == "macos" ]]; then

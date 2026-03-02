@@ -22,15 +22,15 @@ export const CORE_RULES = `- 除非特别说明否则不要创建文档、不要
 
 // 提示词常量对象
 export const PROMPT_SECTIONS = {
-  // Heng 工具（且慢）提示词
-  heng: {
-    base: `- 只能通过MCP \`heng\`（且慢）对我进行询问，禁止直接询问或结束任务询问`,
-    detail: `且慢工具（heng）使用细节：
-- 需求不明确时使用 \`heng\` 询问澄清，提供预定义选项
-- 在有多个方案的时候，需要使用 \`heng\` 询问，而不是自作主张
-- 在有方案/策略需要更新时，需要使用 \`heng\` 询问，而不是自作主张
-- 即将完成请求前必须调用 \`heng\` 请求反馈
-- 在没有明确通过使用 \`heng\` 询问并得到可以完成任务/结束时，禁止主动结束对话/请求`,
+  // Qieman 工具（且慢）提示词
+  qieman: {
+    base: `- 只能通过MCP \`qieman\`（且慢）对我进行询问，禁止直接询问或结束任务询问`,
+    detail: `且慢工具（qieman）使用细节：
+- 需求不明确时使用 \`qieman\` 询问澄清，提供预定义选项
+- 在有多个方案的时候，需要使用 \`qieman\` 询问，而不是自作主张
+- 在有方案/策略需要更新时，需要使用 \`qieman\` 询问，而不是自作主张
+- 即将完成请求前必须调用 \`qieman\` 请求反馈
+- 在没有明确通过使用 \`qieman\` 询问并得到可以完成任务/结束时，禁止主动结束对话/请求`,
   } as PromptSection,
 
   // 记忆管理工具提示词
@@ -53,7 +53,7 @@ export const PROMPT_SECTIONS = {
 // 默认MCP工具配置
 export const DEFAULT_MCP_TOOLS: MCPToolConfig[] = [
   {
-    id: 'heng',
+    id: 'qieman',
     name: '且慢智能审查工具',
     description: '智能代码审查交互工具（且慢）',
     enabled: true,

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use crate::constants::{window, theme, audio, mcp, telegram, font};
 
-pub const CURRENT_CONFIG_VERSION: u32 = 1;
+pub const CURRENT_CONFIG_VERSION: u32 = 2;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AppConfig {
@@ -190,7 +190,7 @@ pub struct TimeoutAutoSubmitConfig {
     #[serde(default = "default_timeout_auto_submit_seconds")]
     pub timeout_seconds: u32,
     #[serde(default = "default_timeout_auto_submit_prompt_source")]
-    pub prompt_source: String, // "continue" | "custom" | "manual" | "recall_heng"
+    pub prompt_source: String, // "continue" | "custom" | "manual" | "recall_qieman"
     #[serde(default)]
     pub custom_prompt_id: Option<String>,
     #[serde(default = "default_timeout_auto_submit_manual_prompt")]
@@ -367,7 +367,7 @@ pub fn default_continue_prompt() -> String {
 
 pub fn default_mcp_tools() -> HashMap<String, bool> {
     let mut tools = HashMap::new();
-    tools.insert(mcp::TOOL_HENG.to_string(), true); // 且慢工具默认启用
+    tools.insert(mcp::TOOL_QIEMAN.to_string(), true); // 且慢工具默认启用
     tools.insert(mcp::TOOL_JI.to_string(), false); // 记忆管理工具默认关闭
     tools.insert(mcp::TOOL_SOU.to_string(), false); // 代码搜索工具默认关闭
     tools
