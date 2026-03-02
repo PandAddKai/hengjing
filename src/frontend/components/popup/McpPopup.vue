@@ -169,7 +169,7 @@ async function handleTimeoutAutoSubmit() {
     if (timeoutPromptSource.value === 'continue') {
       promptContent = continuePrompt.value
     }
-    else if (timeoutPromptSource.value === 'recall_qieman') {
+    else if (timeoutPromptSource.value === 'recall_qm') {
       promptContent = '重新调用且慢MCP工具'
     }
     else if (timeoutPromptSource.value === 'custom' && timeoutCustomPromptId.value) {

@@ -12,7 +12,7 @@ use crate::mcp::utils::{generate_request_id, popup_error};
 pub struct InteractionTool;
 
 impl InteractionTool {
-    pub async fn qieman(
+    pub async fn qm(
         request: QiemanRequest,
     ) -> Result<CallToolResult, McpError> {
         let popup_request = PopupRequest {

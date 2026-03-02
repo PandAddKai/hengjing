@@ -115,7 +115,7 @@ impl ServerHandler for QiemanServer {
         let mut tools = Vec::new();
 
         // 且慢工具始终可用（必需工具）
-        let qieman_schema = serde_json::json!({
+        let qm_schema = serde_json::json!({
             "type": "object",
             "properties": {
                 "message": {
@@ -135,9 +135,9 @@ impl ServerHandler for QiemanServer {
             "required": ["message"]
         });
 
-        if let serde_json::Value::Object(schema_map) = qieman_schema {
+        if let serde_json::Value::Object(schema_map) = qm_schema {
             tools.push(Tool {
-                name: Cow::Borrowed("qieman"),
+                name: Cow::Borrowed("qm"),
                 description: Some(Cow::Borrowed("智能代码审查交互工具，支持预定义选项、自由文本输入和图片上传")),
                 input_schema: Arc::new(schema_map),
                 annotations: None,
@@ -200,17 +200,17 @@ impl ServerHandler for QiemanServer {
         log_debug!("收到工具调用请求: {}", request.name);
 
         match request.name.as_ref() {
-            "qieman" => {
+            "qm" => {
                 // 解析请求参数
                 let arguments_value = request.arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
-                let qieman_request: QiemanRequest = serde_json::from_value(arguments_value)
+                let qm_request: QiemanRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
                 // 调用且慢工具
-                InteractionTool::qieman(qieman_request).await
+                InteractionTool::qm(qm_request).await
             }
             "ji" => {
                 // 检查记忆管理工具是否启用

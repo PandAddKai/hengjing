@@ -7,7 +7,7 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null
 interface TimeoutAutoSubmitConfig {
   enabled: boolean
   timeout_seconds: number
-  prompt_source: string // "continue" | "custom" | "manual" | "recall_qieman"
+  prompt_source: string // "continue" | "custom" | "manual" | "recall_qm"
   custom_prompt_id: string | null
   manual_prompt: string
 }
@@ -159,7 +159,7 @@ onMounted(() => {
             <n-radio value="continue">
               使用继续提示词
             </n-radio>
-            <n-radio value="recall_qieman">
+            <n-radio value="recall_qm">
               重新调用且慢MCP工具
             </n-radio>
             <n-radio value="custom">

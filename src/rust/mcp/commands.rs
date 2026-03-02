@@ -29,10 +29,10 @@ pub async fn get_mcp_tools_config(state: State<'_, AppState>) -> Result<Vec<MCPT
     
     // 且慢工具 - 始终存在，无配置选项
     tools.push(MCPToolConfig {
-        id: mcp::TOOL_QIEMAN.to_string(),
+        id: mcp::TOOL_QM.to_string(),
         name: "且慢".to_string(),
-        description: "智能代码审查交互工具（工具名：qieman），支持预定义选项、自由文本输入和图片上传".to_string(),
-        enabled: config.mcp_config.tools.get(mcp::TOOL_QIEMAN).copied().unwrap_or(true),
+        description: "智能代码审查交互工具（工具名：qm），支持预定义选项、自由文本输入和图片上传".to_string(),
+        enabled: config.mcp_config.tools.get(mcp::TOOL_QM).copied().unwrap_or(true),
         can_disable: false, // 且慢工具是必需的
         icon: "i-carbon-chat text-lg text-blue-600 dark:text-blue-400".to_string(),
         icon_bg: "bg-blue-100 dark:bg-blue-900".to_string(),
@@ -84,7 +84,7 @@ pub async fn set_mcp_tool_enabled(
         let mut config = state.config.lock().map_err(|e| format!("获取配置失败: {}", e))?;
         
         // 检查工具是否可以禁用
-        if tool_id == mcp::TOOL_QIEMAN && !enabled {
+        if tool_id == mcp::TOOL_QM && !enabled {
             return Err("且慢工具是必需的，无法禁用".to_string());
         }
         

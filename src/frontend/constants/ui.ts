@@ -61,7 +61,7 @@ export const REPLY_CONFIG = {
 
 // MCP 工具常量
 export const MCP_TOOLS = {
-  qieman: 'qieman',
+  qm: 'qm',
   ji: 'ji',
   sou: 'sou',
 } as const
