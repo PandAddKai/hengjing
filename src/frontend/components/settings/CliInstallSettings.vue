@@ -131,7 +131,7 @@ onMounted(loadStatus)
             <span :class="status.heng_installed ? 'text-green-500' : 'text-orange-500'">
               {{ status.heng_installed ? '✓' : '✗' }}
             </span>
-            <code class="bg-black/10 dark:bg-white/10 px-1 rounded">且慢</code>
+            <code class="bg-black/10 dark:bg-white/10 px-1 rounded">恒境</code>
             <span class="opacity-60">MCP 服务器</span>
           </div>
           <div class="flex items-center gap-2">

@@ -22,7 +22,7 @@ export const CORE_RULES = `- 除非特别说明否则不要创建文档、不要
 
 // 提示词常量对象
 export const PROMPT_SECTIONS = {
-  // Heng 工具（且慢）提示词
+  // Heng 工具（恒境）提示词
   heng: {
     base: `- 【强制】只能通过MCP \`heng\` 工具与用户交流，禁止直接结束回合
 - 【强制】每次回合结束前必须调用 \`heng\` 工具，无例外`,
@@ -53,8 +53,8 @@ export const PROMPT_SECTIONS = {
 export const DEFAULT_MCP_TOOLS: MCPToolConfig[] = [
   {
     id: 'heng',
-    name: '且慢智能审查工具',
-    description: '智能代码审查交互工具（且慢）',
+    name: '恒境智能审查工具',
+    description: '智能代码审查交互工具（恒境）',
     enabled: true,
     canDisable: false,
     icon: 'i-carbon-chat text-lg text-blue-600 dark:text-blue-400',

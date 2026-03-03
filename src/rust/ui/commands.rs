@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager, State};
 
 #[tauri::command]
 pub async fn get_app_info() -> Result<String, String> {
-    Ok(format!("且慢 v{}", env!("CARGO_PKG_VERSION")))
+    Ok(format!("恒境 v{}", env!("CARGO_PKG_VERSION")))
 }
 
 #[tauri::command]

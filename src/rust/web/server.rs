@@ -136,7 +136,7 @@ pub async fn handle_web_mode(request: &PopupRequest) -> Result<String> {
 
                 log_important!(info, "Web 模式已启动: {}", url_with_token);
                 eprintln!("\n================================================");
-                eprintln!("  且慢 Web UI: {}", url_with_token);
+                eprintln!("  恒境 Web UI: {}", url_with_token);
                 eprintln!("  在浏览器中打开上述地址进行交互");
                 eprintln!("  （URL 包含认证 token，请勿泄露）");
                 eprintln!("================================================\n");
@@ -481,7 +481,7 @@ fn build_tauri_shim(request: Option<&PopupRequest>, _config_json: &str, auth_tok
         .unwrap_or_else(|| "null".to_string());
 
     format!(r#"
-/* 且慢 Web Mode - Tauri API Shim */
+/* 恒境 Web Mode - Tauri API Shim */
 (function() {{
   'use strict';
 
@@ -604,7 +604,7 @@ fn build_tauri_shim(request: Option<&PopupRequest>, _config_json: &str, auth_tok
   }};
 
   connectWebSocket();
-  console.log('[且慢 Web] Tauri API Shim 已加载');
+  console.log('[恒境 Web] Tauri API Shim 已加载');
 }})();
 "#)
 }

@@ -1,13 +1,13 @@
 // 应用程序相关常量
 
 /// 应用程序名称
-pub const NAME: &str = "且慢";
+pub const NAME: &str = "恒境";
 
 /// 应用程序英文名称
 pub const NAME_EN: &str = "hengjing";
 
 /// 应用程序描述
-pub const DESCRIPTION: &str = "且慢 - AI 交互确认助手，支持 MCP 协议";
+pub const DESCRIPTION: &str = "恒境 - AI 交互确认助手，支持 MCP 协议";
 
 /// 应用程序版本（从 Cargo.toml 获取）
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

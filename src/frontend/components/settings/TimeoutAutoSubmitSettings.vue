@@ -160,7 +160,7 @@ onMounted(() => {
               使用继续提示词
             </n-radio>
             <n-radio value="recall_heng">
-              重新调用且慢MCP工具
+              重新调用恒境MCP工具
             </n-radio>
             <n-radio value="custom">
               从模板选择

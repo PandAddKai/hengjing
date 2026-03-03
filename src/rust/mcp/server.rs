@@ -119,7 +119,7 @@ impl ServerHandler for HengServer {
 
         let mut tools = Vec::new();
 
-        // 且慢工具始终可用（必需工具）
+        // 恒境工具始终可用（必需工具）
         let heng_schema = serde_json::json!({
             "type": "object",
             "properties": {
@@ -218,7 +218,7 @@ impl ServerHandler for HengServer {
                 let heng_request: HengRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
-                // 调用且慢工具
+                // 调用恒境工具
                 InteractionTool::heng(heng_request).await
             }
             "ji" => {

@@ -49,7 +49,7 @@ pub fn dispatch(cmd: &str, args: &Value) -> Option<Value> {
             serde_json::to_value(&c.mcp_config.tools).unwrap_or(serde_json::json!({}))
         })),
         "get_app_info" => Some(serde_json::json!({
-            "name": "且慢",
+            "name": "恒境",
             "version": env!("CARGO_PKG_VERSION"),
             "mode": "web"
         })),

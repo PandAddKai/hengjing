@@ -397,7 +397,7 @@ watch(() => acemcpConfig.value.text_extensions, (list) => {
         <template #icon>
           <div class="i-carbon-connection-signal text-lg" />
         </template>
-        MCP工具配置已更改，请在您的MCP客户端中重新连接且慢服务以使更改生效。
+        MCP工具配置已更改，请在您的MCP客户端中重新连接恒境服务以使更改生效。
       </n-alert>
 
       <!-- 加载状态 -->

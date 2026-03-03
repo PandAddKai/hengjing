@@ -92,7 +92,7 @@ fn handle_web_mcp_request(request_file: &str) -> Result<()> {
 
 /// 显示帮助信息
 fn print_help() {
-    println!("且慢 - 智能代码审查工具 v{}", env!("CARGO_PKG_VERSION"));
+    println!("恒境 - 智能代码审查工具 v{}", env!("CARGO_PKG_VERSION"));
     println!();
     println!("用法:");
     println!("  hengjing gui              启动设置界面（GUI）");
@@ -113,5 +113,5 @@ fn print_help() {
 
 /// 显示版本信息
 fn print_version() {
-    println!("且慢 v{}", env!("CARGO_PKG_VERSION"));
+    println!("恒境 v{}", env!("CARGO_PKG_VERSION"));
 }

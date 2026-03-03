@@ -53,7 +53,7 @@ pub fn install_cli_tools() -> Result<String> {
     
     // 检查源文件是否存在
     if !Path::new(&hengjing_src).exists() {
-        return Err(anyhow::anyhow!("找不到且慢 MCP 二进制文件: {}", hengjing_src));
+        return Err(anyhow::anyhow!("找不到恒境 MCP 二进制文件: {}", hengjing_src));
     }
     if !Path::new(&deng_src).exists() {
         return Err(anyhow::anyhow!("找不到等二进制文件: {}", deng_src));
@@ -71,7 +71,7 @@ pub fn install_cli_tools() -> Result<String> {
     
     // 创建新的符号链接
     symlink(&hengjing_src, &hengjing_dst)
-        .map_err(|e| anyhow::anyhow!("创建且慢 MCP 符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, hengjing_src, hengjing_dst))?;
+        .map_err(|e| anyhow::anyhow!("创建恒境 MCP 符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, hengjing_src, hengjing_dst))?;
     
     symlink(&deng_src, &deng_dst)
         .map_err(|e| anyhow::anyhow!("创建等符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, deng_src, deng_dst))?;
