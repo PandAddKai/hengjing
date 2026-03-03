@@ -5,7 +5,7 @@
 ### 方式一：使用安装脚本（推荐）
 
 ```bash
-git clone https://github.com/KerwinKoo/hengjing.git
+git clone https://github.com/PandAddKai/hengjing.git
 cd hengjing
 
 chmod +x install.sh
@@ -14,7 +14,7 @@ chmod +x install.sh
 
 ### 方式二：下载预编译版本
 
-从 [Releases](https://github.com/KerwinKoo/hengjing/releases) 页面下载对应平台的预编译版本：
+从 [Releases](https://github.com/PandAddKai/hengjing/releases) 页面下载对应平台的预编译版本：
 
 - **Linux**: `continuum-cli-*-linux-x86_64.tar.gz`
 - **macOS**: `continuum-cli-*-macos-universal.tar.gz`
@@ -29,13 +29,12 @@ chmod +x install.sh
 ```bash
 # Linux/macOS 示例
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-cp 等 恒境 hengjing ~/.local/bin/
+cp 等 恒境 ~/.local/bin/
 ```
 
 ## 验证安装
 
 ```bash
-hengjing --help
 恒境 --help
 ```
 
@@ -57,20 +56,14 @@ hengjing --help
 
 ### 统一入口（推荐）
 ```bash
-hengjing gui              # 启动设置界面
-hengjing serve            # 启动 MCP 服务器
-hengjing --mcp-request <文件>  # 处理单个 MCP 请求
 ```
 
 ### 兼容命令
 ```bash
-恒境                      # 等同于 hengjing serve
-等                        # 等同于 hengjing gui
 ```
 
 ## 工具说明
 
-- **hengjing**: 统一入口，支持 gui/serve 子命令
 - **恒境**: MCP 服务器（向后兼容）
 - **等**: GUI 设置界面（向后兼容）
 
@@ -84,7 +77,7 @@ hengjing --mcp-request <文件>  # 处理单个 MCP 请求
 
 ### 权限问题
 ```bash
-chmod +x hengjing 等 恒境
+chmod +x 等 恒境
 ```
 
 ### PATH 问题
@@ -106,7 +99,7 @@ pnpm build
 cargo build --release
 
 # 安装
-cp target/release/{hengjing,等,恒境} ~/.local/bin/
+cp target/release/{等,恒境} ~/.local/bin/
 ```
 
 ## 更新
@@ -119,5 +112,5 @@ cp target/release/{hengjing,等,恒境} ~/.local/bin/
 git pull
 pnpm build
 cargo build --release
-cp target/release/{hengjing,等,恒境} ~/.local/bin/
+cp target/release/{等,恒境} ~/.local/bin/
 ```

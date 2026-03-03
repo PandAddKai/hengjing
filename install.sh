@@ -66,7 +66,7 @@ fi
 
 echo ""
 echo "📋 使用方法："
-echo "  恒境        - 启动 MCP 服务器（或使用 hengjing serve）"
+echo "  恒境        - 启动 MCP 服务器（直接运行恒境即可）"
 echo "  等          - 启动弹窗界面"
 echo ""
 echo "📝 MCP 客户端配置："

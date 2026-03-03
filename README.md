@@ -38,7 +38,7 @@
 
 ### macOS
 
-1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `.dmg` 文件
+1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `.dmg` 文件
 2. 将 `且慢.app` 拖入 `/Applications`
 3. 打开应用，在设置 → CLI 安装中点击"一键安装"
 
@@ -50,12 +50,12 @@ sudo ln -sf /Applications/且慢.app/Contents/MacOS/等 /usr/local/bin/等
 
 ### Windows
 
-1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
-2. 解压到你喜欢的目录，例如 `C:\Program Files\hengjing\`
+1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
+2. 解压到你喜欢的目录，例如 `C:\Program Files\恒境\`
 3. 将该目录添加到系统 PATH 环境变量：
    - 右键「此电脑」→「属性」→「高级系统设置」→「环境变量」
    - 在「系统变量」中找到 `Path`，点击「编辑」→「新建」
-   - 添加解压目录路径，如 `C:\Program Files\hengjing`
+   - 添加解压目录路径，如 `C:\Program Files\恒境`
    - 确认保存，重启终端生效
 
 4. 验证安装：
@@ -71,7 +71,7 @@ sudo ln -sf /Applications/且慢.app/Contents/MacOS/等 /usr/local/bin/等
 {
   "mcpServers": {
     "且慢": {
-      "command": "C:\\Program Files\\hengjing\\恒境.exe",
+      "command": "C:\\Program Files\\恒境\\恒境.exe",
       "autoApprove": ["heng"],
       "timeout": 36000000
     }
@@ -83,12 +83,12 @@ sudo ln -sf /Applications/且慢.app/Contents/MacOS/等 /usr/local/bin/等
 
 ### Linux
 
-1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-linux-x86_64.tar.gz` 文件
+1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `continuum-cli-*-linux-x86_64.tar.gz` 文件
 2. 解压并安装：
 ```bash
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-sudo mv 恒境 等 hengjing /usr/local/bin/
-sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等 /usr/local/bin/hengjing
+sudo mv 恒境 等 /usr/local/bin/
+sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等
 ```
 
 ### 配置 MCP 客户端
@@ -121,7 +121,7 @@ sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等 /usr/local/bin/hengjing
 ## 🛠️ 本地开发
 
 ```bash
-git clone https://github.com/KerwinKoo/hengjing.git
+git clone https://github.com/PandAddKai/hengjing.git
 cd hengjing
 pnpm install
 pnpm tauri:dev
