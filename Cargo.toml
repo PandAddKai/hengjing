@@ -1,17 +1,17 @@
 [package]
-name = "qieman"
+name = "hengjing"
 version = "6.5.1"
 edition = "2021"
 description = "且慢 - AI 交互确认助手，支持 MCP 协议"
 license = "MIT"
 repository = "https://github.com/PandAddKai/hengjing"
-default-run = "qieman"
+default-run = "hengjing"
 
 [lib]
 path = "src/rust/lib.rs"
 
 [[bin]]
-name = "qieman"
+name = "hengjing"
 path = "src/rust/bin/hengjing.rs"
 
 [[bin]]

@@ -42,12 +42,12 @@ pnpm build
 Write-Host "🔨 构建二进制文件..." -ForegroundColor Yellow
 cargo build --release
 
-# 检查构建结果 (qieman 为主入口，等 为 GUI，恒境 为 MCP 服务器)
-$QiemanPath = "target\release\qieman.exe"
+# 检查构建结果 (hengjing 为主入口，等 为 GUI，恒境 为 MCP 服务器)
+$QiemanPath = "target\release\hengjing.exe"
 $DengPath = "target\release\等.exe"
 $HengPath = "target\release\恒境.exe"
 if (-not (Test-Path $QiemanPath) -or -not (Test-Path $DengPath) -or -not (Test-Path $HengPath)) {
-    Write-Host "❌ 二进制文件构建失败，需要: qieman.exe, 等.exe, 恒境.exe" -ForegroundColor Red
+    Write-Host "❌ 二进制文件构建失败，需要: hengjing.exe, 等.exe, 恒境.exe" -ForegroundColor Red
     exit 1
 }
 
@@ -73,7 +73,7 @@ Write-Host "📁 创建安装目录: $InstallDir" -ForegroundColor Yellow
 New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
 
 # 复制二进制文件
-$MainExe = "$BinDir\qieman.exe"
+$MainExe = "$BinDir\hengjing.exe"
 $UiExe = "$BinDir\等.exe"
 $McpExe = "$BinDir\恒境.exe"
 

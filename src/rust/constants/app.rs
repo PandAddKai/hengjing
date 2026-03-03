@@ -4,7 +4,7 @@
 pub const NAME: &str = "且慢";
 
 /// 应用程序英文名称
-pub const NAME_EN: &str = "qieman";
+pub const NAME_EN: &str = "hengjing";
 
 /// 应用程序描述
 pub const DESCRIPTION: &str = "且慢 - AI 交互确认助手，支持 MCP 协议";
@@ -31,7 +31,7 @@ pub const CONFIG_FILE_NAME: &str = "config.json";
 pub const LOG_FILE_PREFIX: &str = "continuum";
 
 /// 应用程序标识符（用于系统集成）
-pub const APP_IDENTIFIER: &str = "com.qieman.app";
+pub const APP_IDENTIFIER: &str = "com.hengjing.app";
 
 /// 用户代理字符串
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));

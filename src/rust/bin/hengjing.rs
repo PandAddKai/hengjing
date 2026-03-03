@@ -1,7 +1,7 @@
-use qieman::app::{handle_cli_args, run_tauri_app};
-use qieman::mcp::run_server;
-use qieman::utils::auto_init_logger;
-use qieman::log_important;
+use hengjing::app::{handle_cli_args, run_tauri_app};
+use hengjing::mcp::run_server;
+use hengjing::utils::auto_init_logger;
+use hengjing::log_important;
 use anyhow::Result;
 
 fn main() -> Result<()> {
@@ -15,7 +15,7 @@ fn main() -> Result<()> {
         .and_then(|n| n.to_str())
         .unwrap_or("");
 
-    if exe_name.contains("恒境") || exe_name.contains("qieman") {
+    if exe_name.contains("恒境") || exe_name.contains("hengjing") {
         return run_mcp_server();
     }
 

@@ -95,20 +95,20 @@ fn print_help() {
     println!("且慢 - 智能代码审查工具 v{}", env!("CARGO_PKG_VERSION"));
     println!();
     println!("用法:");
-    println!("  qieman gui              启动设置界面（GUI）");
-    println!("  qieman serve            启动 MCP 服务器（stdio）");
-    println!("  qieman --mcp-request <文件>  处理单个 MCP 请求");
-    println!("  qieman --help           显示此帮助信息");
-    println!("  qieman --version        显示版本信息");
+    println!("  hengjing gui              启动设置界面（GUI）");
+    println!("  hengjing serve            启动 MCP 服务器（stdio）");
+    println!("  hengjing --mcp-request <文件>  处理单个 MCP 请求");
+    println!("  hengjing --help           显示此帮助信息");
+    println!("  hengjing --version        显示版本信息");
     println!();
     println!("兼容命令:");
-    println!("  等                        等同于 qieman gui");
-    println!("  恒境                      等同于 qieman serve");
+    println!("  等                        等同于 hengjing gui");
+    println!("  恒境                      等同于 hengjing serve");
     println!();
     println!("环境变量:");
-    println!("  QIEMAN_WEB_MODE=1       强制使用 Web 模式");
-    println!("  QIEMAN_WEB_PORT=18963   Web 模式端口（默认 18963）");
-    println!("  QIEMAN_WEB_HOST=0.0.0.0 Web 模式监听地址（默认 127.0.0.1）");
+    println!("  HENGJING_WEB_MODE=1       强制使用 Web 模式");
+    println!("  HENGJING_WEB_PORT=18963   Web 模式端口（默认 18963）");
+    println!("  HENGJING_WEB_HOST=0.0.0.0 Web 模式监听地址（默认 127.0.0.1）");
 }
 
 /// 显示版本信息

@@ -85,7 +85,7 @@ static SERVER_INSTANCE: OnceLock<ServerInstance> = OnceLock::new();
 /// 检测是否应该使用 Web 模式
 pub fn should_use_web_mode() -> bool {
     // 强制 Web 模式（环境变量）
-    if std::env::var("QIEMAN_WEB_MODE").unwrap_or_default() == "1" {
+    if std::env::var("HENGJING_WEB_MODE").unwrap_or_default() == "1" {
         return true;
     }
 
@@ -219,10 +219,10 @@ fn build_mcp_request_event(request: &PopupRequest) -> String {
 
 /// 尝试绑定监听端口，支持端口冲突时自动重试
 async fn try_bind_listener() -> Result<tokio::net::TcpListener> {
-    let host = std::env::var("QIEMAN_WEB_HOST")
+    let host = std::env::var("HENGJING_WEB_HOST")
         .unwrap_or_else(|_| "127.0.0.1".to_string());
 
-    let base_port = std::env::var("QIEMAN_WEB_PORT")
+    let base_port = std::env::var("HENGJING_WEB_PORT")
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
         .unwrap_or(DEFAULT_PORT);

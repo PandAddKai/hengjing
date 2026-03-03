@@ -29,13 +29,13 @@ chmod +x install.sh
 ```bash
 # Linux/macOS 示例
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-cp 等 恒境 qieman ~/.local/bin/
+cp 等 恒境 hengjing ~/.local/bin/
 ```
 
 ## 验证安装
 
 ```bash
-qieman --help
+hengjing --help
 恒境 --help
 ```
 
@@ -57,20 +57,20 @@ qieman --help
 
 ### 统一入口（推荐）
 ```bash
-qieman gui              # 启动设置界面
-qieman serve            # 启动 MCP 服务器
-qieman --mcp-request <文件>  # 处理单个 MCP 请求
+hengjing gui              # 启动设置界面
+hengjing serve            # 启动 MCP 服务器
+hengjing --mcp-request <文件>  # 处理单个 MCP 请求
 ```
 
 ### 兼容命令
 ```bash
-恒境                      # 等同于 qieman serve
-等                        # 等同于 qieman gui
+恒境                      # 等同于 hengjing serve
+等                        # 等同于 hengjing gui
 ```
 
 ## 工具说明
 
-- **qieman**: 统一入口，支持 gui/serve 子命令
+- **hengjing**: 统一入口，支持 gui/serve 子命令
 - **恒境**: MCP 服务器（向后兼容）
 - **等**: GUI 设置界面（向后兼容）
 
@@ -84,7 +84,7 @@ qieman --mcp-request <文件>  # 处理单个 MCP 请求
 
 ### 权限问题
 ```bash
-chmod +x qieman 等 恒境
+chmod +x hengjing 等 恒境
 ```
 
 ### PATH 问题
@@ -106,7 +106,7 @@ pnpm build
 cargo build --release
 
 # 安装
-cp target/release/{qieman,等,恒境} ~/.local/bin/
+cp target/release/{hengjing,等,恒境} ~/.local/bin/
 ```
 
 ## 更新
@@ -119,5 +119,5 @@ cp target/release/{qieman,等,恒境} ~/.local/bin/
 git pull
 pnpm build
 cargo build --release
-cp target/release/{qieman,等,恒境} ~/.local/bin/
+cp target/release/{hengjing,等,恒境} ~/.local/bin/
 ```

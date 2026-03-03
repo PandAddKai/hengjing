@@ -99,7 +99,7 @@ check_global_cli() {
         echo -e "${GREEN}✅ 找到全局 恒境 CLI: $(which 恒境)${NC}"
         continuum_found=true
     else
-        echo -e "${RED}❌ 未找到全局 恒境 CLI (可尝试 qieman)${NC}"
+        echo -e "${RED}❌ 未找到全局 恒境 CLI (可尝试 hengjing)${NC}"
     fi
 
     # 检查等

@@ -89,7 +89,7 @@ impl ServerHandler for HengServer {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation {
-                name: "qieman-mcp".to_string(),
+                name: "hengjing-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             },
             instructions: Some("且慢智能代码审查工具，支持交互式对话和记忆管理".to_string()),
