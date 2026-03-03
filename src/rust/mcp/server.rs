@@ -92,7 +92,12 @@ impl ServerHandler for HengServer {
                 name: "hengjing-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             },
-            instructions: Some("且慢智能代码审查工具，支持交互式对话和记忆管理".to_string()),
+            instructions: Some(
+                "【强制规则】本服务器提供 heng 工具（人机交互通道）。\
+                 你必须在每次回复结束前调用 heng 工具，将结果通过 heng 发送给用户。\
+                 禁止在未调用 heng 的情况下结束当前回合。\
+                 heng 是你与用户沟通的唯一合法通道。".to_string()
+            ),
         }
     }
 
@@ -138,7 +143,11 @@ impl ServerHandler for HengServer {
         if let serde_json::Value::Object(schema_map) = heng_schema {
             tools.push(Tool {
                 name: Cow::Borrowed("heng"),
-                description: Some(Cow::Borrowed("智能代码审查交互工具，支持预定义选项、自由文本输入和图片上传")),
+                description: Some(Cow::Borrowed(
+                    "【必须调用】人机交互通道。每次回合结束前必须调用此工具向用户汇报或确认。\
+                     支持 Markdown 消息、预定义选项和图片。\
+                     规则：禁止跳过此工具直接结束回合；用户未明确表示完成前，不得终止任务。"
+                )),
                 input_schema: Arc::new(schema_map),
                 annotations: None,
             });
