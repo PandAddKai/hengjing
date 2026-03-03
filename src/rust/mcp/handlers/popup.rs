@@ -59,10 +59,10 @@ fn create_new_ui_process(request: &PopupRequest) -> Result<String> {
         let _ = fs::set_permissions(&temp_file, fs::Permissions::from_mode(0o600));
     }
 
-    // 尝试找到 qieman 命令的路径
+    // 尝试找到等命令的路径
     let command_path = find_ui_command()?;
 
-    // 调用 qieman --mcp-request
+    // 调用等命令
     let output = Command::new(&command_path)
         .arg("--mcp-request")
         .arg(temp_file.to_string_lossy().to_string())
@@ -85,40 +85,28 @@ fn create_new_ui_process(request: &PopupRequest) -> Result<String> {
     }
 }
 
-/// 查找 qieman UI 命令的路径
+/// 查找等 UI 命令的路径
 fn find_ui_command() -> Result<String> {
-    // 1. 优先使用当前可执行文件自身（qieman 是唯一入口）
-    if let Ok(current_exe) = std::env::current_exe() {
-        if current_exe.exists() {
-            return Ok(current_exe.to_string_lossy().to_string());
-        }
-    }
-
-    // 2. 尝试同目录下的 qieman
+    // 1. 优先尝试与当前 MCP 服务器同目录的等命令
     if let Ok(current_exe) = std::env::current_exe() {
         if let Some(exe_dir) = current_exe.parent() {
-            let local_ui_path = exe_dir.join("qieman");
+            let local_ui_path = exe_dir.join("等");
             if local_ui_path.exists() && is_executable(&local_ui_path) {
                 return Ok(local_ui_path.to_string_lossy().to_string());
             }
-            // Windows: 尝试 .exe 后缀
-            let local_ui_path_exe = exe_dir.join("qieman.exe");
-            if local_ui_path_exe.exists() && is_executable(&local_ui_path_exe) {
-                return Ok(local_ui_path_exe.to_string_lossy().to_string());
-            }
         }
     }
 
-    // 3. 尝试全局命令
-    if test_command_available("qieman") {
-        return Ok("qieman".to_string());
+    // 2. 尝试全局命令
+    if test_command_available("等") {
+        return Ok("等".to_string());
     }
 
     anyhow::bail!(
-        "找不到 qieman UI 命令。请确保：\n\
+        "找不到等 UI 命令。请确保：\n\
          1. 已编译项目：cargo build --release\n\
          2. 或已全局安装：./install.sh\n\
-         3. 或 qieman 命令在 PATH 中"
+         3. 或等命令在同目录下"
     )
 }
 

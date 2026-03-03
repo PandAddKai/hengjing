@@ -92,16 +92,25 @@ check_global_cli() {
     echo -e "${YELLOW}🔍 检查全局CLI工具...${NC}"
 
     local continuum_found=false
+    local dengxiaxia_found=false
 
-    # 检查 qieman
-    if command -v qieman &> /dev/null; then
-        echo -e "${GREEN}✅ 找到全局 qieman CLI: $(which qieman)${NC}"
+    # 检查恒境 (MCP 服务器)
+    if command -v 恒境 &> /dev/null; then
+        echo -e "${GREEN}✅ 找到全局 恒境 CLI: $(which 恒境)${NC}"
         continuum_found=true
     else
-        echo -e "${RED}❌ 未找到全局 qieman CLI${NC}"
+        echo -e "${RED}❌ 未找到全局 恒境 CLI (可尝试 qieman)${NC}"
     fi
 
-    if [[ "$continuum_found" == false ]]; then
+    # 检查等
+    if command -v 等 &> /dev/null; then
+        echo -e "${GREEN}✅ 找到全局 等 CLI: $(which 等)${NC}"
+        dengxiaxia_found=true
+    else
+        echo -e "${RED}❌ 未找到全局 等 CLI${NC}"
+    fi
+
+    if [[ "$continuum_found" == false || "$dengxiaxia_found" == false ]]; then
         echo -e "${YELLOW}💡 全局CLI工具未完全安装，安装方法:${NC}"
         echo -e "${BLUE}   cargo install --path . --bins${NC}"
         echo -e "${YELLOW}   或者选择使用本地编译版本${NC}"
@@ -179,8 +188,8 @@ check_cli_tools() {
 
     echo -e "${YELLOW}📋 检查本地CLI工具 (${BUILD_TYPE})...${NC}"
 
-    if [[ ! -f "$CLI_PATH/qieman" ]]; then
-        echo -e "${RED}❌ 未找到 qieman CLI工具${NC}"
+    if [[ ! -f "$CLI_PATH/恒境" ]]; then
+        echo -e "${RED}❌ 未找到 恒境 CLI工具${NC}"
         if [[ "$BUILD_TYPE" == "release" ]]; then
             echo -e "${YELLOW}💡 请先编译项目: cargo build --release${NC}"
         else
@@ -196,17 +205,40 @@ check_cli_tools() {
             exit 1
         fi
     fi
+
+    if [[ ! -f "$CLI_PATH/等" ]]; then
+        echo -e "${RED}❌ 未找到 等 CLI工具${NC}"
+        if [[ "$BUILD_TYPE" == "release" ]]; then
+            echo -e "${YELLOW}💡 请先编译项目: cargo build --release${NC}"
+        else
+            echo -e "${YELLOW}💡 请先编译项目: cargo build${NC}"
+        fi
+
+        # 提供自动编译选项
+        echo -e "${BLUE}🔨 是否现在编译项目？ (y/n)${NC}"
+        read -p "请选择: " compile_choice
+        if [[ "$compile_choice" =~ ^[Yy]$ ]]; then
+            compile_project
+        else
+            exit 1
+        fi
     fi
 
     # 检查执行权限
-    if [[ ! -x "$CLI_PATH/qieman" ]]; then
-        echo -e "${YELLOW}⚠️  qieman CLI工具没有执行权限，正在添加...${NC}"
-        chmod +x "$CLI_PATH/qieman"
+    if [[ ! -x "$CLI_PATH/恒境" ]]; then
+        echo -e "${YELLOW}⚠️  恒境 CLI工具没有执行权限，正在添加...${NC}"
+        chmod +x "$CLI_PATH/恒境"
+    fi
+
+    if [[ ! -x "$CLI_PATH/等" ]]; then
+        echo -e "${YELLOW}⚠️  等 CLI工具没有执行权限，正在添加...${NC}"
+        chmod +x "$CLI_PATH/等"
     fi
 
     echo -e "${GREEN}✅ 本地CLI工具检查完成 (${BUILD_TYPE})${NC}"
     echo -e "   构建类型: ${BUILD_TYPE}"
-    echo -e "   qieman: $CLI_PATH/qieman"
+    echo -e "   恒境: $CLI_PATH/恒境"
+    echo -e "   等: $CLI_PATH/等"
 }
 
 # 检查测试JSON文件
@@ -278,7 +310,7 @@ test_simple_popup() {
     echo ""
 
     # 启动弹窗
-    local cli_cmd=$(get_cli_command "qieman")
+    local cli_cmd=$(get_cli_command "等")
     echo -e "${GREEN}🎯 启动弹窗...${NC}"
     echo -e "${BLUE}执行命令: $cli_cmd --mcp-request test_simple_popup.json${NC}"
     if $cli_cmd --mcp-request "$PROJECT_ROOT/test_simple_popup.json"; then
@@ -300,7 +332,7 @@ test_markdown_popup() {
     echo ""
 
     # 启动弹窗
-    local cli_cmd=$(get_cli_command "qieman")
+    local cli_cmd=$(get_cli_command "等")
     echo -e "${GREEN}🎯 启动弹窗...${NC}"
     echo -e "${BLUE}执行命令: $cli_cmd --mcp-request test_markdown_popup.json${NC}"
     if $cli_cmd --mcp-request "$PROJECT_ROOT/test_markdown_popup.json"; then
@@ -340,7 +372,7 @@ EOF
     echo ""
     
     # 启动弹窗
-    local cli_cmd=$(get_cli_command "qieman")
+    local cli_cmd=$(get_cli_command "等")
     echo -e "${GREEN}🎯 启动自定义弹窗...${NC}"
     echo -e "${BLUE}执行命令: $cli_cmd --mcp-request $TEMP_FILE${NC}"
     if $cli_cmd --mcp-request "$TEMP_FILE"; then
@@ -383,15 +415,27 @@ show_cli_help() {
     echo -e "${YELLOW}📖 CLI工具帮助信息:${NC}"
     echo ""
 
-    local qieman_cmd=$(get_cli_command "qieman")
+    local continuum_cmd=$(get_cli_command "恒境")
+    local dengxiaxia_cmd=$(get_cli_command "等")
 
-    echo -e "${BLUE}qieman CLI:${NC}"
-    echo -e "${BLUE}命令: $qieman_cmd${NC}"
-    if $qieman_cmd --help 2>/dev/null; then
+    echo -e "${BLUE}恒境 CLI:${NC}"
+    echo -e "${BLUE}命令: $continuum_cmd${NC}"
+    if $continuum_cmd --help 2>/dev/null; then
         echo -e "${GREEN}✅ 帮助信息显示完成${NC}"
     else
-        echo -e "${YELLOW}⚠️  qieman CLI 无帮助信息或不支持 --help 参数${NC}"
-        echo -e "${BLUE}尝试直接运行:${NC} $qieman_cmd"
+        echo -e "${YELLOW}⚠️  恒境 CLI 无帮助信息或不支持 --help 参数${NC}"
+        echo -e "${BLUE}尝试直接运行:${NC} $continuum_cmd"
+    fi
+    echo ""
+
+    echo -e "${BLUE}等 CLI:${NC}"
+    echo -e "${BLUE}命令: $dengxiaxia_cmd${NC}"
+    if $dengxiaxia_cmd --help 2>/dev/null; then
+        echo -e "${GREEN}✅ 帮助信息显示完成${NC}"
+    else
+        echo -e "${YELLOW}⚠️  等 CLI 无帮助信息或不支持 --help 参数${NC}"
+        echo -e "${BLUE}尝试直接运行:${NC} $dengxiaxia_cmd"
+        echo -e "${BLUE}MCP请求参数:${NC} $dengxiaxia_cmd --mcp-request <json_file>"
     fi
 }
 

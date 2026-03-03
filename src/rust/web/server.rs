@@ -485,7 +485,7 @@ fn build_tauri_shim(request: Option<&PopupRequest>, _config_json: &str, auth_tok
 (function() {{
   'use strict';
 
-  window.__QIEMAN_WEB_BUILD__ = 1;
+  window.__HENGJING_WEB_BUILD__ = 1;
   var _authToken = '{auth_token}';
 
   // === Callback & Event Infrastructure ===

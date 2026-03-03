@@ -10,6 +10,14 @@ fn main() -> Result<()> {
     }
 
     let args: Vec<String> = std::env::args().collect();
+    let exe_name = std::path::Path::new(&args[0])
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+
+    if exe_name.contains("恒境") || exe_name.contains("qieman") {
+        return run_mcp_server();
+    }
 
     if args.len() >= 2 {
         match args[1].as_str() {

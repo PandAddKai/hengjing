@@ -8,9 +8,9 @@
 
 相比原项目，本 fork 主要做了以下调整：
 
-- **命名优化**：将部分不雅命名替换为更友好的名称
-  - MCP 工具名：`zhi` → `qieman`
-  - 统一入口二进制：`qieman`
+- **命名优化**：将部分不雅命名替换为更友好的中文名称
+  - MCP 工具名：`zhi` → `heng`
+  - 设置命令：`等一下` → `等`
 - **CLI 安装**：新增设置界面一键安装功能，方便直接部署到系统 PATH
 - **MD数学公式**：支持md格式的数学公式显示
 - **输入优化**：优化大文本输入时的性能问题
@@ -38,18 +38,19 @@
 
 ### macOS
 
-1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `.dmg` 文件
+1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `.dmg` 文件
 2. 将 `且慢.app` 拖入 `/Applications`
 3. 打开应用，在设置 → CLI 安装中点击"一键安装"
 
 或手动安装 CLI：
 ```bash
-sudo ln -sf /Applications/且慢.app/Contents/MacOS/qieman /usr/local/bin/qieman
+sudo ln -sf /Applications/且慢.app/Contents/MacOS/恒境 /usr/local/bin/恒境
+sudo ln -sf /Applications/且慢.app/Contents/MacOS/等 /usr/local/bin/等
 ```
 
 ### Windows
 
-1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
+1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-windows-x86_64.zip` 文件
 2. 解压到你喜欢的目录，例如 `C:\Program Files\qieman\`
 3. 将该目录添加到系统 PATH 环境变量：
    - 右键「此电脑」→「属性」→「高级系统设置」→「环境变量」
@@ -60,7 +61,8 @@ sudo ln -sf /Applications/且慢.app/Contents/MacOS/qieman /usr/local/bin/qieman
 4. 验证安装：
 ```powershell
 # 打开 PowerShell 或 CMD
-qieman.exe --version
+且慢.exe --version
+等.exe
 ```
 
 #### Windows MCP 配置
@@ -69,25 +71,24 @@ qieman.exe --version
 {
   "mcpServers": {
     "且慢": {
-      "command": "C:\\Program Files\\qieman\\qieman.exe",
-      "args": ["serve"],
-      "autoApprove": ["qieman"],
+      "command": "C:\\Program Files\\qieman\\恒境.exe",
+      "autoApprove": ["heng"],
       "timeout": 36000000
     }
   }
 }
 ```
 
-> **💡 提示**：如果已添加到 PATH，也可以直接使用 `"command": "qieman.exe"`
+> **💡 提示**：如果已添加到 PATH，也可以直接使用 `"command": "且慢.exe"`
 
 ### Linux
 
-1. 下载 [Releases](https://github.com/PandAddKai/hengjing/releases) 中的 `continuum-cli-*-linux-x86_64.tar.gz` 文件
+1. 下载 [Releases](https://github.com/KerwinKoo/hengjing/releases) 中的 `continuum-cli-*-linux-x86_64.tar.gz` 文件
 2. 解压并安装：
 ```bash
 tar -xzf continuum-cli-*-linux-x86_64.tar.gz
-sudo mv qieman /usr/local/bin/
-sudo chmod +x /usr/local/bin/qieman
+sudo mv 恒境 等 qieman /usr/local/bin/
+sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等 /usr/local/bin/qieman
 ```
 
 ### 配置 MCP 客户端
@@ -96,9 +97,8 @@ sudo chmod +x /usr/local/bin/qieman
 {
   "mcpServers": {
     "且慢": {
-      "command": "qieman",
-      "args": ["serve"],
-      "autoApprove": ["qieman"],
+      "command": "恒境",
+      "autoApprove": ["heng"],
       "timeout": 36000000
     }
   }
@@ -108,12 +108,12 @@ sudo chmod +x /usr/local/bin/qieman
 ### 打开设置界面
 
 ```bash
-qieman gui
+等
 ```
 
 ## 🔧 工具说明
 
-- **qieman**：智能代码审查交互工具
+- **heng**：智能代码审查交互工具
 - **ji**：记忆管理工具
 - **sou**：代码搜索工具（基于 ACE）
   - 📖 [详细说明](./ACEMCP.md)
@@ -121,7 +121,7 @@ qieman gui
 ## 🛠️ 本地开发
 
 ```bash
-git clone https://github.com/PandAddKai/hengjing.git
+git clone https://github.com/KerwinKoo/hengjing.git
 cd hengjing
 pnpm install
 pnpm tauri:dev
@@ -134,12 +134,12 @@ pnpm tauri:build
 
 ## 🐛 故障排除
 
-### Cursor（Remote SSH）首次弹窗停留在"保持此页面打开即可..."
+### Cursor（Remote SSH）首次弹窗停留在“保持此页面打开即可...”
 
 现象：Cursor 第一次调用 MCP 后打开了且慢的等待页，但没有进入可输入的交互界面，导致交互卡住；断开/重连后再次调用才恢复正常。
 
 可用绕过：
-- 确保且慢 UI 进程未在后台运行（退出后再触发 MCP，让它走"新进程 + --mcp-request 文件"路径）。
+- 确保 `等`/且慢 UI 进程未在后台运行（退出后再触发 MCP，让它走“新进程 + --mcp-request 文件”路径）。
 - 清理残留 IPC socket：`rm -f /tmp/qieman-ui.sock`，再触发一次 MCP。
 
 ## 🙏 致谢

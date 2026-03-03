@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 且慢 MCP 工具 - 最简化安装脚本
-# 只需构建 qieman CLI 工具即可运行 MCP
+# 只需构建两个CLI工具即可运行MCP
 
 set -e
 
@@ -41,7 +41,7 @@ export CXX="${CXX:-/usr/bin/g++}"
 cargo build --release
 
 # 检查构建结果
-if [[ ! -f "target/release/qieman" ]]; then
+if [[ ! -f "target/release/等" ]] || [[ ! -f "target/release/恒境" ]]; then
     echo "❌ 构建失败"
     exit 1
 fi
@@ -50,8 +50,9 @@ fi
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
-cp "target/release/qieman" "$BIN_DIR/"
-chmod +x "$BIN_DIR/qieman"
+cp "target/release/等" "$BIN_DIR/"
+cp "target/release/恒境" "$BIN_DIR/"
+chmod +x "$BIN_DIR/等" "$BIN_DIR/恒境"
 
 echo "✅ 安装完成！CLI 工具已安装到 $BIN_DIR"
 
@@ -65,8 +66,8 @@ fi
 
 echo ""
 echo "📋 使用方法："
-echo "  qieman serve    - 启动 MCP 服务器"
-echo "  qieman gui      - 启动设置界面"
+echo "  恒境        - 启动 MCP 服务器（或使用 qieman serve）"
+echo "  等          - 启动弹窗界面"
 echo ""
 echo "📝 MCP 客户端配置："
-echo '{"mcpServers": {"且慢": {"command": "qieman", "args": ["serve"]}}}'
+echo '{"mcpServers": {"且慢": {"command": "恒境"}}}'

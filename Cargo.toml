@@ -12,7 +12,15 @@ path = "src/rust/lib.rs"
 
 [[bin]]
 name = "qieman"
-path = "src/rust/bin/qieman.rs"
+path = "src/rust/bin/hengjing.rs"
+
+[[bin]]
+name = "等"
+path = "src/rust/main.rs"
+
+[[bin]]
+name = "恒境"
+path = "src/rust/bin/mcp_server.rs"
 
 [dependencies]
 tauri = { version = "2.0", features = [

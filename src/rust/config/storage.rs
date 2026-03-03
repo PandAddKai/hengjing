@@ -156,14 +156,6 @@ fn run_migrations(config: &mut AppConfig) {
         migrate_v0_to_v1(config);
     }
 
-    if from_version < 2 {
-        migrate_v1_to_v2(config);
-    }
-
-    if from_version < 3 {
-        migrate_v2_to_v3(config);
-    }
-
     config.config_version = CURRENT_CONFIG_VERSION;
 }
 
@@ -184,31 +176,5 @@ fn migrate_v0_to_v1(config: &mut AppConfig) {
                 config.shortcut_config.shortcuts.insert(key, default_binding);
             }
         }
-    }
-}
-
-/// v1 -> v2: 品牌重命名 heng → qieman
-fn migrate_v1_to_v2(config: &mut AppConfig) {
-    // 迁移 mcp_config.tools: "heng" → "qm"
-    if let Some(enabled) = config.mcp_config.tools.remove("heng") {
-        config.mcp_config.tools.entry("qm".to_string()).or_insert(enabled);
-    }
-
-    // 迁移 timeout_auto_submit_config.prompt_source: "recall_heng" → "recall_qm"
-    if config.timeout_auto_submit_config.prompt_source == "recall_heng" {
-        config.timeout_auto_submit_config.prompt_source = "recall_qm".to_string();
-    }
-}
-
-/// v2 -> v3: MCP 工具名 qieman → qm（避免与命令名冲突）
-fn migrate_v2_to_v3(config: &mut AppConfig) {
-    // 迁移 mcp_config.tools: "qieman" → "qm"
-    if let Some(enabled) = config.mcp_config.tools.remove("qieman") {
-        config.mcp_config.tools.entry("qm".to_string()).or_insert(enabled);
-    }
-
-    // 迁移 timeout_auto_submit_config.prompt_source: "recall_qieman" → "recall_qm"
-    if config.timeout_auto_submit_config.prompt_source == "recall_qieman" {
-        config.timeout_auto_submit_config.prompt_source = "recall_qm".to_string();
     }
 }

@@ -12,7 +12,8 @@ const INSTALL_DIR: &str = "/usr/local/bin";
 #[derive(Serialize)]
 pub struct CliInstallStatus {
     pub installed: bool,
-    pub qieman_installed: bool,
+    pub heng_installed: bool,
+    pub deng_installed: bool,
     pub install_dir: String,
     pub app_macos_dir: Option<String>,
     pub manual_commands: Option<String>,
@@ -20,8 +21,9 @@ pub struct CliInstallStatus {
 
 /// 检查 CLI 工具是否已安装
 pub fn is_cli_installed() -> bool {
-    let qieman_path = Path::new(INSTALL_DIR).join("qieman");
-    qieman_path.exists()
+    let hengjing_path = Path::new(INSTALL_DIR).join("恒境");
+    let deng_path = Path::new(INSTALL_DIR).join("等");
+    hengjing_path.exists() && deng_path.exists()
 }
 
 /// 获取当前应用的 MacOS 目录路径
@@ -39,32 +41,41 @@ fn get_app_macos_dir() -> Option<String> {
 }
 
 /// 安装 CLI 工具到系统路径
-///
+/// 
 /// 创建符号链接从 /usr/local/bin 指向 .app 内的二进制文件
 #[cfg(unix)]
 pub fn install_cli_tools() -> Result<String> {
     let macos_dir = get_app_macos_dir()
         .ok_or_else(|| anyhow::anyhow!("无法获取应用路径，请确保从 .app 包运行"))?;
-
-    let qieman_src = format!("{}/qieman", macos_dir);
-
+    
+    let hengjing_src = format!("{}/恒境", macos_dir);
+    let deng_src = format!("{}/等", macos_dir);
+    
     // 检查源文件是否存在
-    if !Path::new(&qieman_src).exists() {
-        return Err(anyhow::anyhow!("找不到 qieman 二进制文件: {}", qieman_src));
+    if !Path::new(&hengjing_src).exists() {
+        return Err(anyhow::anyhow!("找不到且慢 MCP 二进制文件: {}", hengjing_src));
     }
-
-    let qieman_dst = format!("{}/qieman", INSTALL_DIR);
-
+    if !Path::new(&deng_src).exists() {
+        return Err(anyhow::anyhow!("找不到等二进制文件: {}", deng_src));
+    }
+    
+    let hengjing_dst = format!("{}/恒境", INSTALL_DIR);
+    let deng_dst = format!("{}/等", INSTALL_DIR);
+    
     // 确保目标目录存在
     fs::create_dir_all(INSTALL_DIR)?;
-
+    
     // 删除旧的符号链接（如果存在）
-    let _ = fs::remove_file(&qieman_dst);
-
+    let _ = fs::remove_file(&hengjing_dst);
+    let _ = fs::remove_file(&deng_dst);
+    
     // 创建新的符号链接
-    symlink(&qieman_src, &qieman_dst)
-        .map_err(|e| anyhow::anyhow!("创建 qieman 符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, qieman_src, qieman_dst))?;
-
+    symlink(&hengjing_src, &hengjing_dst)
+        .map_err(|e| anyhow::anyhow!("创建且慢 MCP 符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, hengjing_src, hengjing_dst))?;
+    
+    symlink(&deng_src, &deng_dst)
+        .map_err(|e| anyhow::anyhow!("创建等符号链接失败: {}。请尝试使用 sudo 运行或手动执行:\nsudo ln -sf {} {}", e, deng_src, deng_dst))?;
+    
     Ok(format!("CLI 工具已安装到 {}", INSTALL_DIR))
 }
 
@@ -77,8 +88,8 @@ pub fn install_cli_tools() -> Result<String> {
 pub fn get_manual_install_commands() -> Option<String> {
     get_app_macos_dir().map(|macos_dir| {
         format!(
-            "sudo ln -sf \"{}/qieman\" /usr/local/bin/qieman",
-            macos_dir
+            "sudo ln -sf \"{}/恒境\" /usr/local/bin/恒境\nsudo ln -sf \"{}/等\" /usr/local/bin/等",
+            macos_dir, macos_dir
         )
     })
 }
@@ -88,12 +99,14 @@ pub fn get_manual_install_commands() -> Option<String> {
 /// 获取 CLI 安装状态
 #[tauri::command]
 pub fn get_cli_install_status() -> CliInstallStatus {
-    let qieman_path = Path::new(INSTALL_DIR).join("qieman");
+    let hengjing_path = Path::new(INSTALL_DIR).join("恒境");
+    let deng_path = Path::new(INSTALL_DIR).join("等");
     let app_macos_dir = get_app_macos_dir();
-
+    
     CliInstallStatus {
-        installed: qieman_path.exists(),
-        qieman_installed: qieman_path.exists(),
+        installed: hengjing_path.exists() && deng_path.exists(),
+        heng_installed: hengjing_path.exists(),
+        deng_installed: deng_path.exists(),
         install_dir: INSTALL_DIR.to_string(),
         app_macos_dir: app_macos_dir.clone(),
         manual_commands: get_manual_install_commands(),
