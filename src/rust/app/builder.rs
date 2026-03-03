@@ -40,6 +40,8 @@ pub fn build_tauri_app() -> Builder<tauri::Wry> {
             // 主题和窗口命令
             get_theme,
             set_theme,
+            get_layout_mode,
+            set_layout_mode,
             get_window_config,
             set_window_config,
             get_reply_config,

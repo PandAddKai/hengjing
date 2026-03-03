@@ -44,6 +44,10 @@ pub struct UiConfig {
     // 置顶设置
     #[serde(default = "default_always_on_top")]
     pub always_on_top: bool,
+
+    // 布局模式
+    #[serde(default = "default_layout_mode")]
+    pub layout_mode: String, // "vertical" | "horizontal"
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -254,7 +258,12 @@ pub fn default_ui_config() -> UiConfig {
         font_config: default_font_config(),
         window_config: default_window_config(),
         always_on_top: default_always_on_top(),
+        layout_mode: default_layout_mode(),
     }
+}
+
+pub fn default_layout_mode() -> String {
+    "vertical".to_string()
 }
 
 pub fn default_audio_config() -> AudioConfig {

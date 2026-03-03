@@ -315,10 +315,26 @@ function handleTextUpdate(text: string) {
   }
 }
 
+// 布局模式
+const layoutMode = ref('vertical')
+
+// 监听布局变更事件
+let layoutUnlisten: (() => void) | null = null
+
 // 组件挂载时设置监听器和加载配置
-onMounted(() => {
+onMounted(async () => {
   loadReplyConfig()
   setupTelegramListener()
+  try {
+    layoutMode.value = await invoke('get_layout_mode') as string
+  }
+  catch {
+    layoutMode.value = 'vertical'
+  }
+  // 监听设置页面的布局切换
+  layoutUnlisten = await listen('layout-mode-changed', (event: any) => {
+    layoutMode.value = event.payload as string
+  })
 })
 
 // 组件卸载时清理监听器
@@ -326,6 +342,9 @@ onUnmounted(() => {
   stopCountdown()
   if (telegramUnlisten) {
     telegramUnlisten()
+  }
+  if (layoutUnlisten) {
+    layoutUnlisten()
   }
 })
 
@@ -506,19 +525,38 @@ Here is my original instruction:
 
 <template>
   <div v-if="isVisible" class="flex flex-col flex-1 min-h-0 overflow-hidden">
-    <!-- 内容区域 - 可滚动 -->
-    <div class="flex-1 overflow-y-auto scrollbar-thin min-h-0">
-      <!-- 消息内容 - 允许选中 -->
-      <div class="mx-2 mt-2 mb-1 px-4 py-3 bg-black-100 rounded-lg select-text" data-guide="popup-content">
-        <PopupContent :request="request" :loading="loading" :current-theme="props.appConfig.theme" @quote-message="handleQuoteMessage" />
+    <!-- 内容区域 -->
+    <div
+      :class="[
+        layoutMode === 'horizontal' ? 'flex flex-row' : 'flex flex-col',
+        'flex-1 min-h-0 overflow-hidden'
+      ]"
+    >
+      <!-- 消息内容 -->
+      <div
+        :class="[
+          layoutMode === 'horizontal' ? 'w-1/2 border-r border-black-200' : '',
+          'overflow-y-auto scrollbar-thin min-h-0'
+        ]"
+      >
+        <div class="mx-2 mt-2 mb-1 px-4 py-3 bg-black-100 rounded-lg select-text" data-guide="popup-content">
+          <PopupContent :request="request" :loading="loading" :current-theme="props.appConfig.theme" @quote-message="handleQuoteMessage" />
+        </div>
       </div>
 
-      <!-- 输入和选项 - 允许选中 -->
-      <div class="px-4 pb-3 bg-black select-text">
-        <PopupInput
-          ref="inputRef" :request="request" :loading="loading" :submitting="submitting"
-          @update="handleInputUpdate" @image-add="handleImageAdd" @image-remove="handleImageRemove"
-        />
+      <!-- 输入和选项 -->
+      <div
+        :class="[
+          layoutMode === 'horizontal' ? 'w-1/2' : '',
+          'overflow-y-auto scrollbar-thin min-h-0'
+        ]"
+      >
+        <div class="px-4 pb-3 bg-black select-text">
+          <PopupInput
+            ref="inputRef" :request="request" :loading="loading" :submitting="submitting"
+            @update="handleInputUpdate" @image-add="handleImageAdd" @image-remove="handleImageRemove"
+          />
+        </div>
       </div>
     </div>
 

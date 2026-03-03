@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { emit as tauriEmit } from '@tauri-apps/api/event'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
@@ -22,7 +23,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['toggleAlwaysOnTop', 'updateWindowSize'])
+const emit = defineEmits(['toggleAlwaysOnTop', 'updateWindowSize', 'layoutChange'])
 
 // 窗口设置状态 - 完全依赖后端
 const localFixed = ref(props.fixedWindowSize)
@@ -244,12 +245,32 @@ function removeWindowResizeListener() {
   }
 }
 
+// 布局模式
+const layoutMode = ref('vertical')
+
+async function loadLayoutMode() {
+  try {
+    layoutMode.value = await invoke('get_layout_mode') as string
+  }
+  catch {
+    layoutMode.value = 'vertical'
+  }
+}
+
+async function setLayout(mode: string) {
+  if (layoutMode.value === mode) return
+  layoutMode.value = mode
+  await invoke('set_layout_mode', { mode })
+  tauriEmit('layout-mode-changed', mode)
+}
+
 // 组件挂载时获取当前窗口大小并设置监听器
 onMounted(async () => {
   await loadWindowConstraints()
   getCurrentWindowSize()
   loadWindowSettingsForMode(localFixed.value)
   setupWindowResizeListener()
+  loadLayoutMode()
 })
 
 // 组件卸载时移除监听器
@@ -279,6 +300,35 @@ onUnmounted(() => {
         size="small"
         @update:value="$emit('toggleAlwaysOnTop')"
       />
+    </div>
+
+    <!-- 布局方向设置 -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <div class="w-1.5 h-1.5 bg-success rounded-full mr-3 flex-shrink-0" />
+        <div>
+          <div class="text-sm font-medium leading-relaxed">
+            布局方向
+          </div>
+          <div class="text-xs opacity-60">
+            切换弹窗内容和输入区域的排列方式
+          </div>
+        </div>
+      </div>
+      <n-button-group size="small">
+        <n-button
+          :type="layoutMode === 'vertical' ? 'primary' : 'default'"
+          @click="setLayout('vertical')"
+        >
+          竖版
+        </n-button>
+        <n-button
+          :type="layoutMode === 'horizontal' ? 'primary' : 'default'"
+          @click="setLayout('horizontal')"
+        >
+          横版
+        </n-button>
+      </n-button-group>
     </div>
 
     <!-- 窗口尺寸设置 -->
