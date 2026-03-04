@@ -146,9 +146,8 @@ export function useMcpHandler() {
         showMcpDialog(event.payload)
       }
 
-      // 兼容：旧版本通过 IPC 转发使用 `ipc-mcp-request`，新版本统一为 `mcp-request`
+      // 统一使用 mcp-request 事件
       await listen('mcp-request', handleEvent)
-      await listen('ipc-mcp-request', handleEvent)
     }
     catch (error) {
       console.error('设置MCP事件监听器失败:', error)

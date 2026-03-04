@@ -71,12 +71,8 @@ pub async fn start_ipc_server(
             });
 
             // 通过 Tauri 事件发送到前端
-            // 约定：统一使用 `mcp-request`；同时保留 `ipc-mcp-request` 兼容旧前端
-            if let Err(e) = app_handle_clone.emit("mcp-request", payload.clone()) {
+            if let Err(e) = app_handle_clone.emit("mcp-request", payload) {
                 log_important!(error, "发送 MCP 请求事件失败: {}", e);
-            }
-            if let Err(e) = app_handle_clone.emit("ipc-mcp-request", payload) {
-                log_important!(error, "发送 IPC MCP 请求事件失败: {}", e);
             }
         }
     });
