@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { McpRequest } from '../../types/popup'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import { listen, emit as tauriEmit } from '@tauri-apps/api/event'
 import { useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -337,6 +337,15 @@ onMounted(async () => {
   })
 })
 
+// 切换布局模式
+async function setLayout(mode: string) {
+  if (layoutMode.value === mode)
+    return
+  layoutMode.value = mode
+  await invoke('set_layout_mode', { mode })
+  tauriEmit('layout-mode-changed', mode)
+}
+
 // 组件卸载时清理监听器
 onUnmounted(() => {
   stopCountdown()
@@ -526,17 +535,11 @@ Here is my original instruction:
 <template>
   <div v-if="isVisible" class="flex flex-col flex-1 min-h-0 overflow-hidden">
     <!-- 内容区域 -->
-    <div
-      :class="[
-        layoutMode === 'horizontal' ? 'flex flex-row' : 'flex flex-col',
-        'flex-1 min-h-0 overflow-hidden'
-      ]"
-    >
+    <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <!-- 消息内容 -->
       <div
-        :class="[
-          layoutMode === 'horizontal' ? 'w-1/2 border-r border-black-200' : '',
-          'overflow-y-auto scrollbar-thin min-h-0'
+        class="overflow-y-auto scrollbar-thin min-h-0" :class="[
+          layoutMode === 'horizontal' ? 'max-h-[35%] flex-shrink-0' : '',
         ]"
       >
         <div class="mx-2 mt-2 mb-1 px-4 py-3 bg-black-100 rounded-lg select-text" data-guide="popup-content">
@@ -547,13 +550,13 @@ Here is my original instruction:
       <!-- 输入和选项 -->
       <div
         :class="[
-          layoutMode === 'horizontal' ? 'w-1/2' : '',
-          'overflow-y-auto scrollbar-thin min-h-0'
+          layoutMode === 'horizontal' ? 'flex-1 min-h-0' : 'overflow-y-auto scrollbar-thin min-h-0',
         ]"
       >
-        <div class="px-4 pb-3 bg-black select-text">
+        <div class="px-4 pb-3 bg-black select-text" :class="[layoutMode === 'horizontal' ? 'h-full' : '']">
           <PopupInput
             ref="inputRef" :request="request" :loading="loading" :submitting="submitting"
+            :layout-mode="layoutMode"
             @update="handleInputUpdate" @image-add="handleImageAdd" @image-remove="handleImageRemove"
           />
         </div>
@@ -562,13 +565,36 @@ Here is my original instruction:
 
     <!-- 底部操作栏 - 固定在底部 -->
     <div class="flex-shrink-0 bg-black-100 border-t-2 border-black-200" data-guide="popup-actions">
-      <PopupActions
-        :request="request" :loading="loading" :submitting="submitting" :can-submit="canSubmit"
-        :continue-reply-enabled="continueReplyEnabled" :input-status-text="inputStatusText"
-        :countdown-remaining="countdownRemaining"
-        @submit="handleSubmit" @continue="handleContinue" @enhance="handleEnhance"
-        @cancel-countdown="cancelCountdown"
-      />
+      <div class="flex items-center">
+        <!-- 布局切换按钮 -->
+        <div class="pl-3 flex-shrink-0">
+          <n-button-group size="tiny">
+            <n-button
+              :type="layoutMode === 'vertical' ? 'primary' : 'default'"
+              size="tiny"
+              @click="setLayout('vertical')"
+            >
+              竖
+            </n-button>
+            <n-button
+              :type="layoutMode === 'horizontal' ? 'primary' : 'default'"
+              size="tiny"
+              @click="setLayout('horizontal')"
+            >
+              横
+            </n-button>
+          </n-button-group>
+        </div>
+        <div class="flex-1">
+          <PopupActions
+            :request="request" :loading="loading" :submitting="submitting" :can-submit="canSubmit"
+            :continue-reply-enabled="continueReplyEnabled" :input-status-text="inputStatusText"
+            :countdown-remaining="countdownRemaining"
+            @submit="handleSubmit" @continue="handleContinue" @enhance="handleEnhance"
+            @cancel-countdown="cancelCountdown"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>

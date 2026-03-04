@@ -31,13 +31,37 @@ impl IpcServerState {
             request_tx,
         }
     }
-    
-    /// 设置当前等待的请求
-    pub async fn set_pending(&self, request: IpcRequest, response_tx: oneshot::Sender<String>) {
-        let mut pending = self.pending_request.lock().await;
-        *pending = Some(PendingRequest { request, response_tx });
+
+    /// 等待挂起槽位空闲，然后原子地设置新的挂起请求
+    ///
+    /// 如果已有请求正在等待用户响应，新请求会排队等待，
+    /// 防止覆盖导致旧请求的 IPC 客户端收到错误并回退到启动新进程。
+    pub async fn wait_and_set_pending(
+        &self,
+        request: IpcRequest,
+    ) -> Option<oneshot::Receiver<String>> {
+        let max_wait = std::time::Duration::from_secs(600);
+        let start = std::time::Instant::now();
+
+        loop {
+            {
+                let mut pending = self.pending_request.lock().await;
+                if pending.is_none() {
+                    let (response_tx, response_rx) = oneshot::channel();
+                    *pending = Some(PendingRequest { request, response_tx });
+                    return Some(response_rx);
+                }
+            }
+
+            if start.elapsed() > max_wait {
+                log_important!(warn, "等待挂起槽位超时（600s），放弃请求: {}", request.id);
+                return None;
+            }
+
+            tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        }
     }
-    
+
     /// 发送响应给等待中的请求
     pub async fn send_response(&self, request_id: &str, response: String) -> Result<()> {
         let mut pending = self.pending_request.lock().await;
@@ -54,7 +78,7 @@ impl IpcServerState {
             anyhow::bail!("没有等待中的请求")
         }
     }
-    
+
     /// 获取请求发送通道
     pub fn get_request_tx(&self) -> mpsc::Sender<IpcRequest> {
         self.request_tx.clone()
@@ -73,30 +97,30 @@ impl IpcServer {
             state: Arc::new(IpcServerState::new(request_tx)),
         }
     }
-    
+
     /// 获取状态引用
     pub fn state(&self) -> Arc<IpcServerState> {
         Arc::clone(&self.state)
     }
-    
+
     /// 启动 IPC 服务器
     #[cfg(unix)]
     pub async fn start(&self) -> Result<()> {
         use tokio::net::UnixListener;
-        
+
         let socket_path = get_socket_path();
-        
+
         // 如果 socket 文件已存在，先删除
         if socket_path.exists() {
             std::fs::remove_file(&socket_path)?;
         }
-        
+
         // 创建 Unix socket 监听器
         let listener = UnixListener::bind(&socket_path)?;
         log_important!(info, "IPC 服务器已启动: {:?}", socket_path);
-        
+
         let state = Arc::clone(&self.state);
-        
+
         // 在后台任务中处理连接
         tokio::spawn(async move {
             loop {
@@ -115,10 +139,10 @@ impl IpcServer {
                 }
             }
         });
-        
+
         Ok(())
     }
-    
+
     #[cfg(windows)]
     pub async fn start(&self) -> Result<()> {
         log_important!(warn, "Windows IPC 服务器暂未实现");
@@ -135,28 +159,43 @@ async fn handle_connection(
     let (reader, mut writer) = stream.into_split();
     let mut buf_reader = BufReader::new(reader);
     let mut line = String::new();
-    
+
     // 读取请求
     let bytes_read = buf_reader.read_line(&mut line).await?;
     if bytes_read == 0 {
         return Ok(());
     }
-    
+
     // 解析请求
     let request: IpcRequest = serde_json::from_str(line.trim())?;
     let request_id = request.id.clone();
-    
-    log_important!(info, "收到 IPC 请求: {}", request_id);
-    
-    // 创建响应通道
-    let (response_tx, response_rx) = oneshot::channel();
-    
-    // 设置等待中的请求
-    state.set_pending(request.clone(), response_tx).await;
-    
+
+    log_important!(info, "收到 IPC 请求: {}，等待挂起槽位...", request_id);
+
+    // 等待挂起槽位空闲，然后原子地设置（不会覆盖正在处理的请求）
+    let response_rx = match state.wait_and_set_pending(request.clone()).await {
+        Some(rx) => rx,
+        None => {
+            // 等待超时
+            let ipc_response = IpcResponse {
+                id: request_id,
+                response: String::new(),
+                success: false,
+                error: Some("等待处理超时，当前有其他请求正在等待用户响应".to_string()),
+            };
+            let response_json = serde_json::to_string(&ipc_response)?;
+            writer.write_all(response_json.as_bytes()).await?;
+            writer.write_all(b"\n").await?;
+            writer.flush().await?;
+            return Ok(());
+        }
+    };
+
+    log_important!(info, "请求 {} 已获得挂起槽位，通知前端", request_id);
+
     // 通知前端有新请求
     let _ = state.get_request_tx().send(request).await;
-    
+
     // 等待响应
     match response_rx.await {
         Ok(response) => {
@@ -184,7 +223,7 @@ async fn handle_connection(
             writer.flush().await?;
         }
     }
-    
+
     Ok(())
 }
 
