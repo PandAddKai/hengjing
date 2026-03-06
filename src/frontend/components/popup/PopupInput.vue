@@ -257,6 +257,11 @@ async function handleImageFiles(files: FileList | File[]): Promise<void> {
 
         // 检查是否已存在相同图片，避免重复添加
         if (!uploadedImages.value.includes(base64)) {
+          // 在修改响应式数组前，先同步 textarea 的实际值到 userInput
+          // 防止 Vue 重渲染时用旧的 userInput 覆盖 textarea 内容
+          if (textareaRef.value) {
+            userInput.value = (textareaRef.value as HTMLTextAreaElement).value
+          }
           uploadedImages.value.push(base64)
           console.log('图片已添加到数组，当前数量:', uploadedImages.value.length)
           message.success(`图片 ${file.name} 已添加`)
@@ -592,6 +597,11 @@ function handleCompositionStart() {
 // 输入法结束组合
 function handleCompositionEnd(event: Event) {
   isComposing.value = false
+  // 组合结束后立即同步 userInput，防止后续重渲染用旧值覆盖
+  const target = event.target as HTMLTextAreaElement
+  if (target) {
+    userInput.value = target.value
+  }
   debouncedEmitUpdate()
 }
 

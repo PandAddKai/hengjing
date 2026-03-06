@@ -5,12 +5,14 @@ interface Props {
   currentTheme?: string
   loading?: boolean
   showMainLayout?: boolean
+  showHistory?: boolean
   alwaysOnTop?: boolean
 }
 
 interface Emits {
   themeChange: [theme: string]
   openMainLayout: []
+  openHistory: []
   toggleAlwaysOnTop: []
 }
 
@@ -18,6 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   currentTheme: 'dark',
   loading: false,
   showMainLayout: false,
+  showHistory: false,
   alwaysOnTop: false,
 })
 
@@ -31,6 +34,10 @@ function handleThemeChange() {
 
 function handleOpenMainLayout() {
   emit('openMainLayout')
+}
+
+function handleOpenHistory() {
+  emit('openHistory')
 }
 
 function handleToggleAlwaysOnTop() {
@@ -66,6 +73,22 @@ function handleToggleAlwaysOnTop() {
             />
           </template>
         </n-button>
+        <!-- 历史记录按钮 -->
+        <n-button
+          size="small"
+          quaternary
+          circle
+          :title="props.showHistory ? '返回聊天' : '对话历史'"
+          @click="handleOpenHistory"
+        >
+          <template #icon>
+            <div
+              :class="props.showHistory ? 'i-carbon-chat' : 'i-carbon-recently-viewed'"
+              class="w-4 h-4 text-white"
+            />
+          </template>
+        </n-button>
+        <!-- 设置按钮 -->
         <n-button
           size="small"
           quaternary

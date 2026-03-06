@@ -20,13 +20,40 @@ export function useMcpHandler() {
    */
   async function handleMcpResponse(response: any) {
     try {
-      // 通过Tauri命令发送响应
+      // 保存对话历史记录（在发送响应前保存，避免 exit_app 后来不及）
+      if (mcpRequest.value) {
+        invoke('save_conversation_record', {
+          request: mcpRequest.value,
+          response,
+        }).catch(e => console.error('保存对话记录失败:', e))
+      }
+
+      const responseStr = JSON.stringify(response)
+
+      // 先通过 IPC 发送响应（UI 已在运行时，请求通过 IPC 到达）
+      // send_mcp_response 只处理 --mcp-request 模式(stdout) 和 response_channel，
+      // 但 IPC 模式下 response_channel 为 None，响应会被丢弃。
+      // 必须调用 send_ipc_response 将响应送回 IPC 服务器 → MCP 服务端。
+      if (mcpRequest.value?.id) {
+        try {
+          await invoke('send_ipc_response', {
+            requestId: mcpRequest.value.id,
+            response: responseStr,
+          })
+        }
+        catch {
+          // 非 IPC 模式（如 --mcp-request 直接启动），无 IPC 服务器，忽略
+        }
+      }
+
+      // 通过 Tauri 命令发送响应（处理 --mcp-request stdout 模式）
       await invoke('send_mcp_response', { response })
 
       if (isWebUiBuild()) {
         // Web 模式：清除当前请求进入等待状态，不退出
         mcpRequest.value = null
-      } else {
+      }
+      else {
         await invoke('exit_app')
       }
     }
@@ -40,18 +67,30 @@ export function useMcpHandler() {
    */
   async function handleMcpCancel() {
     try {
-      // 发送取消信息
+      // 先通过 IPC 发送取消响应
+      if (mcpRequest.value?.id) {
+        try {
+          await invoke('send_ipc_response', {
+            requestId: mcpRequest.value.id,
+            response: JSON.stringify('CANCELLED'),
+          })
+        }
+        catch {
+          // 非 IPC 模式，忽略
+        }
+      }
+
+      // 发送取消信息（--mcp-request 模式）
       await invoke('send_mcp_response', { response: 'CANCELLED' })
 
       if (isWebUiBuild()) {
-        // Web 模式：清除当前请求进入等待状态，不退出
         mcpRequest.value = null
-      } else {
+      }
+      else {
         await invoke('exit_app')
       }
     }
     catch (error) {
-      // 静默处理MCP取消错误
       console.error('MCP取消处理失败:', error)
     }
   }

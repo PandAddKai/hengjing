@@ -80,6 +80,10 @@ pub fn build_tauri_app() -> Builder<tauri::Wry> {
             
             // IPC 命令
             crate::ipc::commands::send_ipc_response,
+
+            // 对话历史命令
+            crate::config::history::save_conversation_record,
+            crate::config::history::get_conversation_history,
             
             // acemcp命令
             crate::mcp::tools::acemcp::commands::get_acemcp_config,

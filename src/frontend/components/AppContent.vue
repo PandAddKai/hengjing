@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { setupExitWarningListener } from '../composables/useExitWarning'
 import { useKeyboard } from '../composables/useKeyboard'
 import { useVersionCheck } from '../composables/useVersionCheck'
 import UpdateModal from './common/UpdateModal.vue'
 import LayoutWrapper from './layout/LayoutWrapper.vue'
+import ConversationHistory from './popup/ConversationHistory.vue'
 import McpPopup from './popup/McpPopup.vue'
 import PopupHeader from './popup/PopupHeader.vue'
 
@@ -58,8 +59,8 @@ const emit = defineEmits<Emits>()
 // 版本检查相关
 const { versionInfo, showUpdateModal } = useVersionCheck()
 
-// 弹窗中的设置显示控制
-const showPopupSettings = ref(false)
+// 弹窗中的视图控制：chat | settings | history
+const activeView = ref<'chat' | 'settings' | 'history'>('chat')
 
 // Web 模式检测
 const isWebMode = computed(() => typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1)
@@ -80,8 +81,9 @@ async function loadInteractionHistory() {
 
 // 截断文本
 function truncateText(text: string, maxLen: number): string {
-  if (!text) return ''
-  return text.length > maxLen ? text.substring(0, maxLen) + '...' : text
+  if (!text)
+    return ''
+  return text.length > maxLen ? `${text.substring(0, maxLen)}...` : text
 }
 
 // 当进入等待状态时加载交互历史
@@ -97,9 +99,13 @@ const message = useMessage()
 // 键盘快捷键处理
 const { handleExitShortcut } = useKeyboard()
 
-// 切换弹窗设置显示
+// 切换视图
 function togglePopupSettings() {
-  showPopupSettings.value = !showPopupSettings.value
+  activeView.value = activeView.value === 'settings' ? 'chat' : 'settings'
+}
+
+function toggleHistory() {
+  activeView.value = activeView.value === 'history' ? 'chat' : 'history'
 }
 
 // 手动处理窗口拖拽
@@ -109,23 +115,24 @@ async function startWindowDrag(event: MouseEvent | TouchEvent) {
   if (target.closest('button') || target.closest('[role="button"]') || target.closest('a')) {
     return
   }
-  
+
   // 阻止默认行为（如文本选择）
   event.preventDefault()
-  
+
   try {
     const appWindow = getCurrentWindow()
     await appWindow.startDragging()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to start dragging:', error)
   }
 }
 
 // 监听 MCP 请求变化，当有新请求时重置设置页面状态
 watch(() => props.mcpRequest, (newRequest) => {
-  if (newRequest && showPopupSettings.value) {
+  if (newRequest && activeView.value !== 'chat') {
     // 有新的 MCP 请求时，自动切换回消息页面
-    showPopupSettings.value = false
+    activeView.value = 'chat'
   }
 }, { immediate: true })
 
@@ -158,8 +165,8 @@ onUnmounted(() => {
       class="flex flex-col w-full h-screen bg-black text-white select-none"
     >
       <!-- 头部 - 固定在顶部，支持拖拽 -->
-      <div 
-        class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200 pt-8" 
+      <div
+        class="sticky top-0 z-50 flex-shrink-0 bg-black-100 border-b-2 border-black-200 pt-8"
         style="-webkit-user-select: none; user-select: none; cursor: default;"
         @mousedown="startWindowDrag"
         @touchstart="startWindowDrag"
@@ -167,17 +174,19 @@ onUnmounted(() => {
         <PopupHeader
           :current-theme="props.appConfig.theme"
           :loading="false"
-          :show-main-layout="showPopupSettings"
+          :show-main-layout="activeView === 'settings'"
+          :show-history="activeView === 'history'"
           :always-on-top="props.appConfig.window.alwaysOnTop"
           @theme-change="$emit('themeChange', $event)"
           @open-main-layout="togglePopupSettings"
+          @open-history="toggleHistory"
           @toggle-always-on-top="$emit('toggleAlwaysOnTop')"
         />
       </div>
 
       <!-- 设置界面 -->
       <div
-        v-show="showPopupSettings"
+        v-show="activeView === 'settings'"
         class="flex-1 overflow-y-auto scrollbar-thin"
       >
         <LayoutWrapper
@@ -193,9 +202,14 @@ onUnmounted(() => {
         />
       </div>
 
+      <!-- 对话历史 -->
+      <ConversationHistory
+        v-show="activeView === 'history'"
+      />
+
       <!-- 弹窗内容 -->
       <McpPopup
-        v-show="!showPopupSettings"
+        v-show="activeView === 'chat'"
         :request="props.mcpRequest"
         :app-config="props.appConfig"
         @response="$emit('mcpResponse', $event)"
@@ -216,12 +230,18 @@ onUnmounted(() => {
             <div class="w-8 h-8 rounded-full bg-primary-500/20 animate-pulse" />
           </div>
         </div>
-        <div class="text-gray-400 text-sm mb-2">已提交，等待下一个请求...</div>
-        <div class="text-gray-600 text-xs mb-8">页面将自动刷新</div>
+        <div class="text-gray-400 text-sm mb-2">
+          已提交，等待下一个请求...
+        </div>
+        <div class="text-gray-600 text-xs mb-8">
+          页面将自动刷新
+        </div>
 
         <!-- 最近交互记录 -->
         <div v-if="interactionHistory.length > 0" class="w-full max-w-2xl">
-          <div class="text-xs text-gray-500 uppercase tracking-wider mb-3 text-center">最近交互记录</div>
+          <div class="text-xs text-gray-500 uppercase tracking-wider mb-3 text-center">
+            最近交互记录
+          </div>
           <div class="space-y-2">
             <div
               v-for="(item, index) in interactionHistory"
@@ -250,7 +270,7 @@ onUnmounted(() => {
       class="flex flex-col w-full h-screen bg-black text-white"
     >
       <!-- 头部骨架 - 支持拖拽 -->
-      <div 
+      <div
         class="flex-shrink-0 bg-black-100 border-b-2 border-black-200 px-4 py-3 pt-11"
         style="-webkit-user-select: none; user-select: none; cursor: default;"
         @mousedown="startWindowDrag"
