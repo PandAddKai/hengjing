@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{mpsc, oneshot, Mutex};
 
 use super::{get_socket_path, IpcRequest, IpcResponse};
@@ -76,6 +76,21 @@ impl IpcServerState {
             }
         } else {
             anyhow::bail!("没有等待中的请求")
+        }
+    }
+
+    /// 取消指定请求的挂起状态（客户端断开时调用）
+    pub async fn cancel_pending(&self, request_id: &str) {
+        let mut pending = self.pending_request.lock().await;
+        let should_remove = pending
+            .as_ref()
+            .map(|req| req.request.id == request_id)
+            .unwrap_or(false);
+        if should_remove {
+            // take() 会 drop PendingRequest，其中的 response_tx 被丢弃
+            // 这样 response_rx 端会收到 Err，但此时已无人在等待
+            let _ = pending.take();
+            log_important!(info, "已取消挂起请求（客户端断开）: {}", request_id);
         }
     }
 
@@ -196,31 +211,52 @@ async fn handle_connection(
     // 通知前端有新请求
     let _ = state.get_request_tx().send(request).await;
 
-    // 等待响应
-    match response_rx.await {
-        Ok(response) => {
-            let ipc_response = IpcResponse {
-                id: request_id,
-                response,
-                success: true,
-                error: None,
-            };
-            let response_json = serde_json::to_string(&ipc_response)?;
-            writer.write_all(response_json.as_bytes()).await?;
-            writer.write_all(b"\n").await?;
-            writer.flush().await?;
+    // 同时监听：用户响应 OR 客户端断开（MCP 进程被 Cursor 重启）
+    // 如果客户端断开而不清理 pending，新请求会被 wait_and_set_pending 卡住，
+    // 最终导致 IPC 超时 → 回退启动新进程 → 出现第二个窗口。
+    let mut disconnect_buf = [0u8; 1];
+    tokio::select! {
+        result = response_rx => {
+            // 正常路径：用户通过前端提交了响应
+            match result {
+                Ok(response) => {
+                    let ipc_response = IpcResponse {
+                        id: request_id,
+                        response,
+                        success: true,
+                        error: None,
+                    };
+                    let response_json = serde_json::to_string(&ipc_response)?;
+                    writer.write_all(response_json.as_bytes()).await?;
+                    writer.write_all(b"\n").await?;
+                    writer.flush().await?;
+                }
+                Err(_) => {
+                    let ipc_response = IpcResponse {
+                        id: request_id,
+                        response: String::new(),
+                        success: false,
+                        error: Some("响应通道已关闭".to_string()),
+                    };
+                    let response_json = serde_json::to_string(&ipc_response)?;
+                    writer.write_all(response_json.as_bytes()).await?;
+                    writer.write_all(b"\n").await?;
+                    writer.flush().await?;
+                }
+            }
         }
-        Err(_) => {
-            let ipc_response = IpcResponse {
-                id: request_id,
-                response: String::new(),
-                success: false,
-                error: Some("响应通道已关闭".to_string()),
-            };
-            let response_json = serde_json::to_string(&ipc_response)?;
-            writer.write_all(response_json.as_bytes()).await?;
-            writer.write_all(b"\n").await?;
-            writer.flush().await?;
+        result = buf_reader.read(&mut disconnect_buf) => {
+            // 客户端断开：MCP 进程被 Cursor 杀掉或重启
+            // 清理 pending 槽位，让新请求能立即获得槽位
+            match result {
+                Ok(0) | Err(_) => {
+                    log_important!(warn, "IPC 客户端已断开（请求 {}），释放挂起槽位", request_id);
+                    state.cancel_pending(&request_id).await;
+                }
+                Ok(_) => {
+                    // 客户端发送了额外数据（不应该发生），忽略
+                }
+            }
         }
     }
 

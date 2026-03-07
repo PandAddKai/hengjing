@@ -204,7 +204,7 @@ impl ServerHandler for HengServer {
     async fn call_tool(
         &self,
         request: CallToolRequestParam,
-        _context: RequestContext<RoleServer>,
+        context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         log_debug!("收到工具调用请求: {}", request.name);
 
@@ -218,8 +218,43 @@ impl ServerHandler for HengServer {
                 let heng_request: HengRequest = serde_json::from_value(arguments_value)
                     .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
 
-                // 调用恒境工具
-                InteractionTool::heng(heng_request).await
+                // 获取 progress token（如果客户端提供了的话）
+                let progress_token = context.meta.get_progress_token();
+
+                // 启动心跳任务：定期发送 progress 通知，防止客户端超时重试
+                let peer = context.peer.clone();
+                let heartbeat_token = progress_token.clone();
+                let heartbeat_handle = tokio::spawn(async move {
+                    let mut tick: u32 = 0;
+                    loop {
+                        tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+                        tick += 1;
+
+                        if let Some(ref token) = heartbeat_token {
+                            let _ = peer.notify_progress(ProgressNotificationParam {
+                                progress_token: token.clone(),
+                                progress: tick,
+                                total: None,
+                                message: Some("等待用户响应...".to_string()),
+                            }).await;
+                        } else {
+                            // 无 progress token，用 logging 通知作为心跳
+                            let _ = peer.notify_logging_message(LoggingMessageNotificationParam {
+                                level: LoggingLevel::Info,
+                                logger: Some("heng".to_string()),
+                                data: serde_json::json!("等待用户响应..."),
+                            }).await;
+                        }
+                    }
+                });
+
+                // 调用恒境工具（阻塞等待用户响应）
+                let result = InteractionTool::heng(heng_request).await;
+
+                // 停止心跳
+                heartbeat_handle.abort();
+
+                result
             }
             "ji" => {
                 // 检查记忆管理工具是否启用
