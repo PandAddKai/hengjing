@@ -13,21 +13,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15
-            os: macos
-            target: aarch64-apple-darwin
-            rust_targets: aarch64-apple-darwin
-            name: macos-aarch64
-          - runner: macos-15-intel
-            os: macos
-            target: x86_64-apple-darwin
-            rust_targets: x86_64-apple-darwin
-            name: macos-x86_64
-          - runner: ubuntu-22.04
-            os: linux
-            target: ''
-            rust_targets: ''
-            name: linux-x86_64
           - runner: windows-latest
             os: windows
             target: ''
@@ -152,11 +137,11 @@ jobs:
           TAG_NAME="${{ github.ref_name }}"
           TAG_VERSION_NUMBER=${TAG_NAME#v}
 
-          # 从项目文件读取版本号
-          if [ -f "version.json" ]; then
-            PROJECT_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' version.json | cut -d'"' -f4)
-          elif [ -f "Cargo.toml" ]; then
+          # 从项目文件读取版本号，优先使用 Cargo.toml
+          if [ -f "Cargo.toml" ]; then
             PROJECT_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
+          elif [ -f "version.json" ]; then
+            PROJECT_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' version.json | cut -d'"' -f4)
           else
             echo "Warning: No version file found, skipping version check"
             exit 0
