@@ -13,25 +13,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-latest
-            args: --target aarch64-apple-darwin
+          - runner: macos-15
+            os: macos
+            target: aarch64-apple-darwin
+            rust_targets: aarch64-apple-darwin
             name: macos-aarch64
-          - platform: macos-latest
-            args: --target x86_64-apple-darwin
+          - runner: macos-15-intel
+            os: macos
+            target: x86_64-apple-darwin
+            rust_targets: x86_64-apple-darwin
             name: macos-x86_64
-          - platform: ubuntu-22.04
-            args: ''
+          - runner: ubuntu-22.04
+            os: linux
+            target: ''
+            rust_targets: ''
             name: linux-x86_64
-          - platform: windows-latest
-            args: ''
+          - runner: windows-latest
+            os: windows
+            target: ''
+            rust_targets: ''
             name: windows-x86_64
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install system dependencies (Linux)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.os == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -62,7 +70,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.rust_targets }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -76,13 +84,9 @@ jobs:
       - name: Build with Tauri (no bundle)
         shell: bash
         run: |
-          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            if [[ "${{ matrix.args }}" == *"aarch64"* ]]; then
-              cargo tauri build --target aarch64-apple-darwin --no-bundle
-            else
-              cargo tauri build --target x86_64-apple-darwin --no-bundle
-            fi
-          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+          if [[ "${{ matrix.os }}" == "macos" ]]; then
+            cargo tauri build --target "${{ matrix.target }}" --no-bundle
+          elif [[ "${{ matrix.os }}" == "windows" ]]; then
             cargo tauri build --no-bundle
           else
             # Linux build - 移除静态链接标志以避免 proc-macro 编译问题
@@ -98,20 +102,16 @@ jobs:
           TAG_NAME="${{ github.ref_name }}"
 
           # 确定目标目录
-          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            if [[ "${{ matrix.args }}" == *"aarch64"* ]]; then
-              TARGET_DIR="target/aarch64-apple-darwin/release"
-            else
-              TARGET_DIR="target/x86_64-apple-darwin/release"
-            fi
-          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+          if [[ "${{ matrix.os }}" == "macos" ]]; then
+            TARGET_DIR="target/${{ matrix.target }}/release"
+          elif [[ "${{ matrix.os }}" == "windows" ]]; then
             TARGET_DIR="target/release"
           else
             TARGET_DIR="target/release"
           fi
 
           # 复制二进制文件
-          if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+          if [[ "${{ matrix.os }}" == "windows" ]]; then
             cp "$TARGET_DIR/等.exe" cli-package/
             cp "$TARGET_DIR/恒境.exe" cli-package/
             cd cli-package
