@@ -1,6 +1,6 @@
 [package]
 name = "hengjing"
-version = "6.5.5"
+version = "6.5.6"
 edition = "2021"
 description = "且慢 - AI 交互确认助手，支持 MCP 协议"
 license = "MIT"
