@@ -14,10 +14,10 @@ pub struct MemoryEntry {
 /// 记忆分类
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum MemoryCategory {
-    Rule,        // 开发规范和规则
-    Preference,  // 用户偏好设置
-    Pattern,     // 常用模式和最佳实践
-    Context,     // 项目上下文信息
+    Rule,       // 开发规范和规则
+    Preference, // 用户偏好设置
+    Pattern,    // 常用模式和最佳实践
+    Context,    // 项目上下文信息
 }
 
 /// 记忆元数据

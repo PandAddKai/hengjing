@@ -39,7 +39,11 @@ impl TelegramCore {
     }
 
     /// 创建新的Telegram核心实例，支持自定义API URL
-    pub fn new_with_api_url(bot_token: String, chat_id: String, api_url: Option<String>) -> Result<Self> {
+    pub fn new_with_api_url(
+        bot_token: String,
+        chat_id: String,
+        api_url: Option<String>,
+    ) -> Result<Self> {
         let mut bot = Bot::new(bot_token);
 
         // 如果提供了自定义API URL，则设置它
@@ -332,7 +336,7 @@ pub async fn test_telegram_connection(bot_token: &str, chat_id: &str) -> Result<
 pub async fn test_telegram_connection_with_api_url(
     bot_token: &str,
     chat_id: &str,
-    api_url: Option<&str>
+    api_url: Option<&str>,
 ) -> Result<String> {
     if bot_token.trim().is_empty() {
         return Err(anyhow::anyhow!("Bot Token不能为空"));

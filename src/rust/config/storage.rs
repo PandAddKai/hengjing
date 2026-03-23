@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, LogicalSize, Manager, State};
 
-use super::settings::{AppConfig, AppState, default_shortcuts, CURRENT_CONFIG_VERSION};
+use super::settings::{default_shortcuts, AppConfig, AppState, CURRENT_CONFIG_VERSION};
 
 pub fn get_config_path(_app: &AppHandle) -> Result<PathBuf> {
     get_standalone_config_path()
@@ -97,8 +97,7 @@ pub async fn load_config_and_apply_window_settings(
             (window_config.free_width, window_config.free_height)
         };
 
-        if let Err(_e) = window.set_size(LogicalSize::new(target_width, target_height)) {
-        }
+        if let Err(_e) = window.set_size(LogicalSize::new(target_width, target_height)) {}
     }
 
     Ok(())
@@ -164,7 +163,10 @@ fn migrate_v0_to_v1(config: &mut AppConfig) {
     let defaults = default_shortcuts();
     for (key, default_binding) in defaults {
         if !config.shortcut_config.shortcuts.contains_key(&key) {
-            config.shortcut_config.shortcuts.insert(key, default_binding);
+            config
+                .shortcut_config
+                .shortcuts
+                .insert(key, default_binding);
         } else if key == "enhance" {
             let existing = config.shortcut_config.shortcuts.get(&key).unwrap();
             if existing.key_combination.key == "Enter"
@@ -173,7 +175,10 @@ fn migrate_v0_to_v1(config: &mut AppConfig) {
                 && !existing.key_combination.alt
                 && !existing.key_combination.meta
             {
-                config.shortcut_config.shortcuts.insert(key, default_binding);
+                config
+                    .shortcut_config
+                    .shortcuts
+                    .insert(key, default_binding);
             }
         }
     }

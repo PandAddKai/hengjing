@@ -3,7 +3,7 @@ use chrono::Utc;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::types::{MemoryEntry, MemoryCategory, MemoryMetadata};
+use super::types::{MemoryCategory, MemoryEntry, MemoryMetadata};
 
 /// 记忆管理器
 pub struct MemoryManager {
@@ -19,12 +19,13 @@ impl MemoryManager {
         let memory_dir = normalized_path.join(".continuum-memory");
 
         // 创建记忆目录，如果失败则说明项目不适合使用记忆功能
-        fs::create_dir_all(&memory_dir)
-            .map_err(|e| anyhow::anyhow!(
+        fs::create_dir_all(&memory_dir).map_err(|e| {
+            anyhow::anyhow!(
                 "无法在git项目中创建记忆目录: {}\n错误: {}\n这可能是因为项目目录没有写入权限。",
                 memory_dir.display(),
                 e
-            ))?;
+            )
+        })?;
 
         let manager = Self {
             memory_dir,
@@ -53,11 +54,10 @@ impl MemoryManager {
         };
 
         // 规范化路径（解析 . 和 .. 等）
-        let canonical_path = absolute_path.canonicalize()
-            .unwrap_or_else(|_| {
-                // 如果 canonicalize 失败，尝试手动规范化
-                Self::manual_canonicalize(&absolute_path).unwrap_or(absolute_path)
-            });
+        let canonical_path = absolute_path.canonicalize().unwrap_or_else(|_| {
+            // 如果 canonicalize 失败，尝试手动规范化
+            Self::manual_canonicalize(&absolute_path).unwrap_or(absolute_path)
+        });
 
         // 验证路径是否存在且为目录
         if !canonical_path.exists() {
@@ -70,7 +70,10 @@ impl MemoryManager {
         }
 
         if !canonical_path.is_dir() {
-            return Err(anyhow::anyhow!("项目路径不是目录: {}", canonical_path.display()));
+            return Err(anyhow::anyhow!(
+                "项目路径不是目录: {}",
+                canonical_path.display()
+            ));
         }
 
         // 验证是否为 git 根目录或其子目录
@@ -258,7 +261,11 @@ impl MemoryManager {
     }
 
     /// 解析记忆文件内容 - 简化版本
-    fn parse_memory_file(&self, content: &str, category: MemoryCategory) -> Result<Vec<MemoryEntry>> {
+    fn parse_memory_file(
+        &self,
+        content: &str,
+        category: MemoryCategory,
+    ) -> Result<Vec<MemoryEntry>> {
         let mut memories = Vec::new();
 
         // 按列表项解析，每个 "- " 开头的行是一个记忆条目
@@ -340,10 +347,8 @@ impl MemoryManager {
                     let content = memory.content.trim();
                     if !content.is_empty() {
                         // 去除多余空格和换行，压缩内容
-                        let compressed_content = content
-                            .split_whitespace()
-                            .collect::<Vec<&str>>()
-                            .join(" ");
+                        let compressed_content =
+                            content.split_whitespace().collect::<Vec<&str>>().join(" ");
                         items.push(compressed_content);
                     }
                 }

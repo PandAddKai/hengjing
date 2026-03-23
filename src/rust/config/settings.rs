@@ -1,7 +1,7 @@
+use crate::constants::{audio, font, mcp, telegram, theme, window};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
-use crate::constants::{window, theme, audio, mcp, telegram, font};
 
 pub const CURRENT_CONFIG_VERSION: u32 = 1;
 
@@ -119,8 +119,8 @@ pub struct McpConfig {
     #[serde(default = "default_mcp_tools")]
     pub tools: HashMap<String, bool>, // MCP工具启用状态
     pub acemcp_base_url: Option<String>, // acemcp API端点URL
-    pub acemcp_token: Option<String>, // acemcp认证令牌
-    pub acemcp_batch_size: Option<u32>, // acemcp批处理大小
+    pub acemcp_token: Option<String>,    // acemcp认证令牌
+    pub acemcp_batch_size: Option<u32>,  // acemcp批处理大小
     pub acemcp_max_lines_per_blob: Option<u32>, // acemcp最大行数/块
     pub acemcp_text_extensions: Option<Vec<String>>, // acemcp文件扩展名
     pub acemcp_exclude_patterns: Option<Vec<String>>, // acemcp排除模式
@@ -139,11 +139,11 @@ pub struct CustomPrompt {
     #[serde(default = "default_prompt_type")]
     pub r#type: String, // "normal" | "conditional"
     // 条件性prompt专用字段
-    pub condition_text: Option<String>,    // 条件描述文本
-    pub template_true: Option<String>,     // 开关为true时的模板
-    pub template_false: Option<String>,    // 开关为false时的模板
+    pub condition_text: Option<String>, // 条件描述文本
+    pub template_true: Option<String>,  // 开关为true时的模板
+    pub template_false: Option<String>, // 开关为false时的模板
     #[serde(default = "default_prompt_state")]
-    pub current_state: bool,               // 当前开关状态（原default_state）
+    pub current_state: bool, // 当前开关状态（原default_state）
 }
 
 // 自定义prompt配置
@@ -517,8 +517,6 @@ pub fn default_prompt_state() -> bool {
     false
 }
 
-
-
 // 自定义prompt默认值函数
 pub fn default_custom_prompts() -> Vec<CustomPrompt> {
     vec![
@@ -684,57 +682,64 @@ pub fn default_shortcuts() -> HashMap<String, ShortcutBinding> {
     let mut shortcuts = HashMap::new();
 
     // 快速发送快捷键
-    shortcuts.insert("quick_submit".to_string(), ShortcutBinding {
-        id: "quick_submit".to_string(),
-        name: "快速发送".to_string(),
-        description: "快速提交当前输入内容".to_string(),
-        action: "submit".to_string(),
-        key_combination: ShortcutKey {
-            key: "Enter".to_string(),
-            ctrl: true,
-            alt: false,
-            shift: false,
-            meta: false,
+    shortcuts.insert(
+        "quick_submit".to_string(),
+        ShortcutBinding {
+            id: "quick_submit".to_string(),
+            name: "快速发送".to_string(),
+            description: "快速提交当前输入内容".to_string(),
+            action: "submit".to_string(),
+            key_combination: ShortcutKey {
+                key: "Enter".to_string(),
+                ctrl: true,
+                alt: false,
+                shift: false,
+                meta: false,
+            },
+            enabled: true,
+            scope: "popup".to_string(),
         },
-        enabled: true,
-        scope: "popup".to_string(),
-    });
+    );
 
     // 增强快捷键
-    shortcuts.insert("enhance".to_string(), ShortcutBinding {
-        id: "enhance".to_string(),
-        name: "增强".to_string(),
-        description: "增强当前输入内容".to_string(),
-        action: "enhance".to_string(),
-        key_combination: ShortcutKey {
-            key: "Enter".to_string(),
-            ctrl: true,
-            alt: false,
-            shift: true,
-            meta: false,
+    shortcuts.insert(
+        "enhance".to_string(),
+        ShortcutBinding {
+            id: "enhance".to_string(),
+            name: "增强".to_string(),
+            description: "增强当前输入内容".to_string(),
+            action: "enhance".to_string(),
+            key_combination: ShortcutKey {
+                key: "Enter".to_string(),
+                ctrl: true,
+                alt: false,
+                shift: true,
+                meta: false,
+            },
+            enabled: true,
+            scope: "popup".to_string(),
         },
-        enabled: true,
-        scope: "popup".to_string(),
-    });
+    );
 
     // 继续快捷键
-    shortcuts.insert("continue".to_string(), ShortcutBinding {
-        id: "continue".to_string(),
-        name: "继续".to_string(),
-        description: "继续对话".to_string(),
-        action: "continue".to_string(),
-        key_combination: ShortcutKey {
-            key: "Enter".to_string(),
-            ctrl: false,
-            alt: true,
-            shift: false,
-            meta: false,
+    shortcuts.insert(
+        "continue".to_string(),
+        ShortcutBinding {
+            id: "continue".to_string(),
+            name: "继续".to_string(),
+            description: "继续对话".to_string(),
+            action: "continue".to_string(),
+            key_combination: ShortcutKey {
+                key: "Enter".to_string(),
+                ctrl: false,
+                alt: true,
+                shift: false,
+                meta: false,
+            },
+            enabled: true,
+            scope: "popup".to_string(),
         },
-        enabled: true,
-        scope: "popup".to_string(),
-    });
+    );
 
     shortcuts
 }
-
-

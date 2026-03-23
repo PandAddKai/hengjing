@@ -1,7 +1,7 @@
 //! IPC Tauri 命令
 
 use std::sync::Arc;
-use tauri::{AppHandle, State, Emitter};
+use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
 use super::server::IpcServerState;
@@ -26,7 +26,9 @@ pub async fn send_ipc_response(
 ) -> Result<(), String> {
     let state_guard = ipc_state.0.lock().await;
     if let Some(state) = state_guard.as_ref() {
-        state.send_response(&request_id, response).await
+        state
+            .send_response(&request_id, response)
+            .await
             .map_err(|e| format!("发送 IPC 响应失败: {}", e))
     } else {
         Err("IPC 服务器未初始化".to_string())
@@ -47,6 +49,7 @@ pub async fn start_ipc_server(
     // 创建并启动 IPC 服务器
     let server = IpcServer::new(request_tx);
     let server_state = server.state();
+    let request_state = server_state.clone();
 
     // 保存服务器状态
     {
@@ -54,25 +57,28 @@ pub async fn start_ipc_server(
         *state_guard = Some(server_state);
     }
 
-    server.start().await.map_err(|e| format!("启动 IPC 服务器失败: {}", e))?;
+    server
+        .start()
+        .await
+        .map_err(|e| format!("启动 IPC 服务器失败: {}", e))?;
 
-    // 在后台任务中监听请求并通过 Tauri 事件发送到前端
+    // 在后台任务中监听请求并为每个请求创建独立 popup 窗口
     let app_handle_clone = app_handle.clone();
     tokio::spawn(async move {
         while let Some(request) = request_rx.recv().await {
-            log_important!(info, "转发 IPC 请求到前端: {}", request.id);
-            
-            // 将 IpcRequest 转换为前端可用的格式
-            let payload = serde_json::json!({
-                "id": request.id,
-                "message": request.message,
-                "predefined_options": request.predefined_options,
-                "is_markdown": request.is_markdown,
-            });
+            let request_id = request.id.clone();
+            log_important!(
+                info,
+                "收到 IPC 请求，准备创建独立 popup 窗口: {}",
+                request_id
+            );
 
-            // 通过 Tauri 事件发送到前端
-            if let Err(e) = app_handle_clone.emit("mcp-request", payload) {
-                log_important!(error, "发送 MCP 请求事件失败: {}", e);
+            let popup_request: crate::mcp::types::PopupRequest = request.into();
+            if let Err(e) =
+                crate::ui::popup_windows::open_popup_window(&app_handle_clone, popup_request).await
+            {
+                log_important!(error, "创建 popup 窗口失败 {}: {}", request_id, e);
+                request_state.cancel_pending(&request_id).await;
             }
         }
     });

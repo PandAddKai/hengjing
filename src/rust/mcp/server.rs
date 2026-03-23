@@ -1,18 +1,16 @@
 use anyhow::Result;
 use rmcp::{
-    Error as McpError, ServerHandler, ServiceExt, RoleServer,
-    model::*,
-    transport::stdio,
-    service::RequestContext,
+    model::*, service::RequestContext, transport::stdio, Error as McpError, RoleServer,
+    ServerHandler, ServiceExt,
 };
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
-use super::tools::{InteractionTool, MemoryTool, AcemcpTool};
+use super::tools::{AcemcpTool, InteractionTool, MemoryTool};
 use super::types::{HengRequest, JiyiRequest};
-use crate::config::{load_standalone_config, get_standalone_config_path};
-use crate::{log_important, log_debug};
+use crate::config::{get_standalone_config_path, load_standalone_config};
+use crate::{log_debug, log_important};
 
 struct ConfigCache {
     tools: HashMap<String, bool>,
@@ -92,12 +90,7 @@ impl ServerHandler for HengServer {
                 name: "hengjing-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
             },
-            instructions: Some(
-                "【强制规则】本服务器提供 heng 工具（人机交互通道）。\
-                 你必须在每次回复结束前调用 heng 工具，将结果通过 heng 发送给用户。\
-                 禁止在未调用 heng 的情况下结束当前回合。\
-                 heng 是你与用户沟通的唯一合法通道。".to_string()
-            ),
+            instructions: None,
         }
     }
 
@@ -114,8 +107,8 @@ impl ServerHandler for HengServer {
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, McpError> {
-        use std::sync::Arc;
         use std::borrow::Cow;
+        use std::sync::Arc;
 
         let mut tools = Vec::new();
 
@@ -144,9 +137,8 @@ impl ServerHandler for HengServer {
             tools.push(Tool {
                 name: Cow::Borrowed("heng"),
                 description: Some(Cow::Borrowed(
-                    "【必须调用】人机交互通道。每次回合结束前必须调用此工具向用户汇报或确认。\
-                     支持 Markdown 消息、预定义选项和图片。\
-                     规则：禁止跳过此工具直接结束回合；用户未明确表示完成前，不得终止任务。"
+                    "人机交互通道，用于向用户展示消息并收集回复。\
+                     支持 Markdown 消息、预定义选项和图片。",
                 )),
                 input_schema: Arc::new(schema_map),
                 annotations: None,
@@ -181,7 +173,9 @@ impl ServerHandler for HengServer {
             if let serde_json::Value::Object(schema_map) = ji_schema {
                 tools.push(Tool {
                     name: Cow::Borrowed("ji"),
-                    description: Some(Cow::Borrowed("全局记忆管理工具，用于存储和管理重要的开发规范、用户偏好和最佳实践")),
+                    description: Some(Cow::Borrowed(
+                        "全局记忆管理工具，用于存储和管理重要的开发规范、用户偏好和最佳实践",
+                    )),
                     input_schema: Arc::new(schema_map),
                     annotations: None,
                 });
@@ -193,7 +187,10 @@ impl ServerHandler for HengServer {
             tools.push(AcemcpTool::get_tool_definition());
         }
 
-        log_debug!("返回给客户端的工具列表: {:?}", tools.iter().map(|t| &t.name).collect::<Vec<_>>());
+        log_debug!(
+            "返回给客户端的工具列表: {:?}",
+            tools.iter().map(|t| &t.name).collect::<Vec<_>>()
+        );
 
         Ok(ListToolsResult {
             tools,
@@ -211,7 +208,8 @@ impl ServerHandler for HengServer {
         match request.name.as_ref() {
             "heng" => {
                 // 解析请求参数
-                let arguments_value = request.arguments
+                let arguments_value = request
+                    .arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
@@ -231,19 +229,23 @@ impl ServerHandler for HengServer {
                         tick += 1;
 
                         if let Some(ref token) = heartbeat_token {
-                            let _ = peer.notify_progress(ProgressNotificationParam {
-                                progress_token: token.clone(),
-                                progress: tick,
-                                total: None,
-                                message: Some("等待用户响应...".to_string()),
-                            }).await;
+                            let _ = peer
+                                .notify_progress(ProgressNotificationParam {
+                                    progress_token: token.clone(),
+                                    progress: tick,
+                                    total: None,
+                                    message: Some("等待用户响应...".to_string()),
+                                })
+                                .await;
                         } else {
                             // 无 progress token，用 logging 通知作为心跳
-                            let _ = peer.notify_logging_message(LoggingMessageNotificationParam {
-                                level: LoggingLevel::Info,
-                                logger: Some("heng".to_string()),
-                                data: serde_json::json!("等待用户响应..."),
-                            }).await;
+                            let _ = peer
+                                .notify_logging_message(LoggingMessageNotificationParam {
+                                    level: LoggingLevel::Info,
+                                    logger: Some("heng".to_string()),
+                                    data: serde_json::json!("等待用户响应..."),
+                                })
+                                .await;
                         }
                     }
                 });
@@ -261,12 +263,13 @@ impl ServerHandler for HengServer {
                 if !self.is_tool_enabled("ji") {
                     return Err(McpError::internal_error(
                         "记忆管理工具已被禁用".to_string(),
-                        None
+                        None,
                     ));
                 }
 
                 // 解析请求参数
-                let arguments_value = request.arguments
+                let arguments_value = request
+                    .arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
@@ -281,43 +284,39 @@ impl ServerHandler for HengServer {
                 if !self.is_tool_enabled("sou") {
                     return Err(McpError::internal_error(
                         "代码搜索工具已被禁用".to_string(),
-                        None
+                        None,
                     ));
                 }
 
                 // 解析请求参数
-                let arguments_value = request.arguments
+                let arguments_value = request
+                    .arguments
                     .map(serde_json::Value::Object)
                     .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
                 // 使用acemcp模块中的AcemcpRequest类型
-                let acemcp_request: crate::mcp::tools::acemcp::types::AcemcpRequest = serde_json::from_value(arguments_value)
-                    .map_err(|e| McpError::invalid_params(format!("参数解析失败: {}", e), None))?;
+                let acemcp_request: crate::mcp::tools::acemcp::types::AcemcpRequest =
+                    serde_json::from_value(arguments_value).map_err(|e| {
+                        McpError::invalid_params(format!("参数解析失败: {}", e), None)
+                    })?;
 
                 // 调用代码搜索工具
                 AcemcpTool::search_context(acemcp_request).await
             }
-            _ => {
-                Err(McpError::invalid_request(
-                    format!("未知的工具: {}", request.name),
-                    None
-                ))
-            }
+            _ => Err(McpError::invalid_request(
+                format!("未知的工具: {}", request.name),
+                None,
+            )),
         }
     }
 }
 
-
-
 /// 启动MCP服务器
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     // 创建并运行服务器
-    let service = HengServer::new()
-        .serve(stdio())
-        .await
-        .inspect_err(|e| {
-            log_important!(error, "启动服务器失败: {}", e);
-        })?;
+    let service = HengServer::new().serve(stdio()).await.inspect_err(|e| {
+        log_important!(error, "启动服务器失败: {}", e);
+    })?;
 
     // 等待服务器关闭
     service.waiting().await?;

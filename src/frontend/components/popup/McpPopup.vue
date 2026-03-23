@@ -32,6 +32,7 @@ interface Props {
   appConfig: AppConfig
   mockMode?: boolean
   testMode?: boolean
+  enableTelegramSync?: boolean
 }
 
 interface Emits {
@@ -51,6 +52,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   mockMode: false,
   testMode: false,
+  enableTelegramSync: true,
 })
 
 const emit = defineEmits<Emits>()
@@ -324,7 +326,9 @@ let layoutUnlisten: (() => void) | null = null
 // 组件挂载时设置监听器和加载配置
 onMounted(async () => {
   loadReplyConfig()
-  setupTelegramListener()
+  if (props.enableTelegramSync) {
+    setupTelegramListener()
+  }
   try {
     layoutMode.value = await invoke('get_layout_mode') as string
   }

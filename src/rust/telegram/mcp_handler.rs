@@ -3,9 +3,9 @@ use std::collections::HashSet;
 use teloxide::prelude::*;
 
 use crate::config::load_standalone_config;
+use crate::log_important;
 use crate::mcp::types::{build_continue_response, build_send_response, PopupRequest};
 use crate::telegram::{handle_callback_query, handle_text_message, TelegramCore, TelegramEvent};
-use crate::log_important;
 
 /// 处理纯Telegram模式的MCP请求（不启动GUI）
 pub async fn handle_telegram_only_mcp_request(request_file: &str) -> Result<()> {
@@ -90,7 +90,9 @@ async fn start_telegram_mcp_listener(
                                 &predefined_options,
                                 &mut selected_options,
                                 &mut options_message_id,
-                            ).await {
+                            )
+                            .await
+                            {
                                 log_important!(warn, "处理callback query失败: {}", e);
                             }
                         }
@@ -104,7 +106,9 @@ async fn start_telegram_mcp_listener(
                                 &mut user_input,
                                 &selected_options,
                                 &request,
-                            ).await {
+                            )
+                            .await
+                            {
                                 if let Some(_result) = e.downcast_ref::<ProcessingComplete>() {
                                     return Ok(());
                                 }
@@ -216,7 +220,9 @@ fn identify_options_message_id(
         let mut contains_our_options = false;
         for row in &inline_keyboard.inline_keyboard {
             for button in row {
-                if let teloxide::types::InlineKeyboardButtonKind::CallbackData(callback_data) = &button.kind {
+                if let teloxide::types::InlineKeyboardButtonKind::CallbackData(callback_data) =
+                    &button.kind
+                {
                     if callback_data.starts_with("toggle:") {
                         contains_our_options = true;
                         break;
@@ -273,15 +279,9 @@ async fn handle_send_pressed(
 }
 
 /// 处理继续按钮按下
-async fn handle_continue_pressed(
-    core: &TelegramCore,
-    request: &PopupRequest,
-) -> Result<()> {
+async fn handle_continue_pressed(core: &TelegramCore, request: &PopupRequest) -> Result<()> {
     // 使用统一的继续响应构建函数
-    let response = build_continue_response(
-        Some(request.id.clone()),
-        "telegram_continue",
-    );
+    let response = build_continue_response(Some(request.id.clone()), "telegram_continue");
 
     // 输出JSON响应到stdout（MCP协议要求）
     println!("{}", response);

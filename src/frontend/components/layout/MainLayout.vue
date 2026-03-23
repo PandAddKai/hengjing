@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import appLogo from '../../../../icons/icon-128.png'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useMessage } from 'naive-ui'
@@ -126,7 +127,7 @@ function testPopup() {
           <!-- 主标题 -->
           <div class="flex items-center justify-center gap-3 mb-3" data-guide="app-logo">
             <img
-              src="/icons/icon-128.png"
+              :src="appLogo"
               alt="恒境 Logo"
               class="w-10 h-10 rounded-xl shadow-lg"
               @error="handleImageError"

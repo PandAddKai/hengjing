@@ -1,9 +1,9 @@
+use crate::app::builder::run_tauri_app;
 use crate::config::load_standalone_telegram_config;
+use crate::log_important;
+use crate::mcp::types::PopupRequest;
 use crate::telegram::handle_telegram_only_mcp_request;
 use crate::web::server::{handle_web_mode, should_use_web_mode};
-use crate::mcp::types::PopupRequest;
-use crate::log_important;
-use crate::app::builder::run_tauri_app;
 use anyhow::Result;
 
 /// 处理命令行参数
@@ -16,17 +16,15 @@ pub fn handle_cli_args() -> Result<()> {
             run_tauri_app();
         }
         // 单参数：帮助或版本
-        2 => {
-            match args[1].as_str() {
-                "--help" | "-h" => print_help(),
-                "--version" | "-v" => print_version(),
-                _ => {
-                    eprintln!("未知参数: {}", args[1]);
-                    print_help();
-                    std::process::exit(1);
-                }
+        2 => match args[1].as_str() {
+            "--help" | "-h" => print_help(),
+            "--version" | "-v" => print_version(),
+            _ => {
+                eprintln!("未知参数: {}", args[1]);
+                print_help();
+                std::process::exit(1);
             }
-        }
+        },
         // 多参数：MCP请求模式
         _ => {
             if args[1] == "--mcp-request" && args.len() >= 3 {

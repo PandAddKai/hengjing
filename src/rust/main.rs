@@ -1,6 +1,6 @@
+use anyhow::Result;
 use hengjing::app::{handle_cli_args, run_tauri_app};
 use hengjing::utils::auto_init_logger;
-use anyhow::Result;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,5 +16,3 @@ fn main() -> Result<()> {
     // 处理命令行参数
     handle_cli_args()
 }
-
-

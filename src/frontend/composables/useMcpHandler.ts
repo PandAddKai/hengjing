@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 function isWebUiBuild(): boolean {
   return typeof window !== 'undefined' && (window as any).__HENGJING_WEB_BUILD__ === 1
@@ -10,20 +10,26 @@ function isWebUiBuild(): boolean {
  * MCP处理组合式函数
  */
 export function useMcpHandler() {
-  const mcpRequest = ref(null)
-  // Web UI 默认进入“对话/等待态”，避免打开后落到主界面造成误解
+  const mcpRequests = ref<any[]>([])
+  // 当前活跃请求 = 队列第一个
+  const mcpRequest = computed(() => mcpRequests.value[0] ?? null)
+  // Web UI 默认进入”对话/等待态”，避免打开后落到主界面造成误解
   const showMcpPopup = ref(isWebUiBuild())
   const lastRequestId = ref<string | null>(null)
+  // 待处理请求数（不含当前显示的）
+  const pendingCount = computed(() => Math.max(0, mcpRequests.value.length - 1))
 
   /**
    * 统一的MCP响应处理
    */
   async function handleMcpResponse(response: any) {
     try {
+      const currentRequest = mcpRequest.value
+
       // 保存对话历史记录（在发送响应前保存，避免 exit_app 后来不及）
-      if (mcpRequest.value) {
+      if (currentRequest) {
         invoke('save_conversation_record', {
-          request: mcpRequest.value,
+          request: currentRequest,
           response,
         }).catch(e => console.error('保存对话记录失败:', e))
       }
@@ -34,10 +40,10 @@ export function useMcpHandler() {
       // send_mcp_response 只处理 --mcp-request 模式(stdout) 和 response_channel，
       // 但 IPC 模式下 response_channel 为 None，响应会被丢弃。
       // 必须调用 send_ipc_response 将响应送回 IPC 服务器 → MCP 服务端。
-      if (mcpRequest.value?.id) {
+      if (currentRequest?.id) {
         try {
           await invoke('send_ipc_response', {
-            requestId: mcpRequest.value.id,
+            requestId: currentRequest.id,
             response: responseStr,
           })
         }
@@ -46,14 +52,21 @@ export function useMcpHandler() {
         }
       }
 
-      // 通过 Tauri 命令发送响应（处理 --mcp-request stdout 模式）
-      await invoke('send_mcp_response', { response })
+      // 通过 Tauri 命令发送响应（处理 --mcp-request stdout 模式 + Web 模式）
+      await invoke('send_mcp_response', { response, requestId: currentRequest?.id })
 
-      if (isWebUiBuild()) {
-        // Web 模式：清除当前请求进入等待状态，不退出
-        mcpRequest.value = null
+      // 从队列中移除当前请求
+      if (currentRequest?.id) {
+        mcpRequests.value = mcpRequests.value.filter(r => r.id !== currentRequest.id)
       }
       else {
+        mcpRequests.value = mcpRequests.value.slice(1)
+      }
+
+      if (isWebUiBuild()) {
+        // Web 模式：保持等待状态（如果队列为空则显示等待页面）
+      }
+      else if (mcpRequests.value.length === 0) {
         await invoke('exit_app')
       }
     }
@@ -67,11 +80,13 @@ export function useMcpHandler() {
    */
   async function handleMcpCancel() {
     try {
+      const currentRequest = mcpRequest.value
+
       // 先通过 IPC 发送取消响应
-      if (mcpRequest.value?.id) {
+      if (currentRequest?.id) {
         try {
           await invoke('send_ipc_response', {
-            requestId: mcpRequest.value.id,
+            requestId: currentRequest.id,
             response: JSON.stringify('CANCELLED'),
           })
         }
@@ -80,13 +95,21 @@ export function useMcpHandler() {
         }
       }
 
-      // 发送取消信息（--mcp-request 模式）
-      await invoke('send_mcp_response', { response: 'CANCELLED' })
+      // 发送取消信息（--mcp-request 模式 + Web 模式）
+      await invoke('send_mcp_response', { response: 'CANCELLED', requestId: currentRequest?.id })
 
-      if (isWebUiBuild()) {
-        mcpRequest.value = null
+      // 从队列中移除当前请求
+      if (currentRequest?.id) {
+        mcpRequests.value = mcpRequests.value.filter(r => r.id !== currentRequest.id)
       }
       else {
+        mcpRequests.value = mcpRequests.value.slice(1)
+      }
+
+      if (isWebUiBuild()) {
+        // Web 模式：保持等待状态
+      }
+      else if (mcpRequests.value.length === 0) {
         await invoke('exit_app')
       }
     }
@@ -99,6 +122,11 @@ export function useMcpHandler() {
    * 显示MCP弹窗
    */
   async function showMcpDialog(request: any) {
+    // 去重：如果队列中已有同 ID 的请求，跳过
+    if (request?.id && mcpRequests.value.some(r => r.id === request.id)) {
+      return
+    }
+
     // 获取Telegram配置，检查是否需要隐藏前端弹窗
     let shouldShowFrontendPopup = true
     try {
@@ -116,8 +144,8 @@ export function useMcpHandler() {
 
     // 根据配置决定是否显示前端弹窗
     if (shouldShowFrontendPopup) {
-      // 设置请求数据和显示状态
-      mcpRequest.value = request
+      // 将请求添加到队列尾部
+      mcpRequests.value = [...mcpRequests.value, request]
       showMcpPopup.value = true
     }
     else {
@@ -195,6 +223,8 @@ export function useMcpHandler() {
 
   return {
     mcpRequest,
+    mcpRequests,
+    pendingCount,
     showMcpPopup,
     handleMcpResponse,
     handleMcpCancel,

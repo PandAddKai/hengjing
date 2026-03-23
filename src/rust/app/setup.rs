@@ -1,8 +1,8 @@
 use anyhow::Result;
 use tauri::{AppHandle, Manager};
 
-use crate::config::{AppState, load_config_and_apply_window_settings};
-use crate::ipc::{IpcStateWrapper, start_ipc_server};
+use crate::config::{load_config_and_apply_window_settings, AppState};
+use crate::ipc::{start_ipc_server, IpcStateWrapper};
 
 /// 应用启动时的初始化逻辑
 pub async fn setup_application(app: &AppHandle) -> Result<()> {

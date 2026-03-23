@@ -3,6 +3,7 @@
 //! 在 UI 进程中运行，监听来自 MCP 的请求
 
 use anyhow::Result;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{mpsc, oneshot, Mutex};
@@ -18,8 +19,8 @@ pub struct PendingRequest {
 
 /// IPC 服务器状态
 pub struct IpcServerState {
-    /// 当前等待响应的请求
-    pending_request: Mutex<Option<PendingRequest>>,
+    /// 等待响应的请求（按 request_id 索引）
+    pending_requests: Mutex<HashMap<String, PendingRequest>>,
     /// 新请求通道发送端
     request_tx: mpsc::Sender<IpcRequest>,
 }
@@ -27,69 +28,41 @@ pub struct IpcServerState {
 impl IpcServerState {
     pub fn new(request_tx: mpsc::Sender<IpcRequest>) -> Self {
         Self {
-            pending_request: Mutex::new(None),
+            pending_requests: Mutex::new(HashMap::new()),
             request_tx,
         }
     }
 
-    /// 等待挂起槽位空闲，然后原子地设置新的挂起请求
-    ///
-    /// 如果已有请求正在等待用户响应，新请求会排队等待，
-    /// 防止覆盖导致旧请求的 IPC 客户端收到错误并回退到启动新进程。
-    pub async fn wait_and_set_pending(
-        &self,
-        request: IpcRequest,
-    ) -> Option<oneshot::Receiver<String>> {
-        let max_wait = std::time::Duration::from_secs(600);
-        let start = std::time::Instant::now();
-
-        loop {
-            {
-                let mut pending = self.pending_request.lock().await;
-                if pending.is_none() {
-                    let (response_tx, response_rx) = oneshot::channel();
-                    *pending = Some(PendingRequest { request, response_tx });
-                    return Some(response_rx);
-                }
-            }
-
-            if start.elapsed() > max_wait {
-                log_important!(warn, "等待挂起槽位超时（600s），放弃请求: {}", request.id);
-                return None;
-            }
-
-            tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-        }
+    /// 设置新的挂起请求，立即返回 oneshot::Receiver
+    pub async fn set_pending(&self, request: IpcRequest) -> oneshot::Receiver<String> {
+        let (response_tx, response_rx) = oneshot::channel();
+        let request_id = request.id.clone();
+        let mut pending = self.pending_requests.lock().await;
+        pending.insert(
+            request_id,
+            PendingRequest {
+                request,
+                response_tx,
+            },
+        );
+        response_rx
     }
 
     /// 发送响应给等待中的请求
     pub async fn send_response(&self, request_id: &str, response: String) -> Result<()> {
-        let mut pending = self.pending_request.lock().await;
-        if let Some(req) = pending.take() {
-            if req.request.id == request_id {
-                let _ = req.response_tx.send(response);
-                Ok(())
-            } else {
-                // 请求 ID 不匹配，放回去
-                *pending = Some(req);
-                anyhow::bail!("请求 ID 不匹配")
-            }
+        let mut pending = self.pending_requests.lock().await;
+        if let Some(req) = pending.remove(request_id) {
+            let _ = req.response_tx.send(response);
+            Ok(())
         } else {
-            anyhow::bail!("没有等待中的请求")
+            anyhow::bail!("没有找到请求 ID: {}", request_id)
         }
     }
 
     /// 取消指定请求的挂起状态（客户端断开时调用）
     pub async fn cancel_pending(&self, request_id: &str) {
-        let mut pending = self.pending_request.lock().await;
-        let should_remove = pending
-            .as_ref()
-            .map(|req| req.request.id == request_id)
-            .unwrap_or(false);
-        if should_remove {
-            // take() 会 drop PendingRequest，其中的 response_tx 被丢弃
-            // 这样 response_rx 端会收到 Err，但此时已无人在等待
-            let _ = pending.take();
+        let mut pending = self.pending_requests.lock().await;
+        if pending.remove(request_id).is_some() {
             log_important!(info, "已取消挂起请求（客户端断开）: {}", request_id);
         }
     }
@@ -185,28 +158,12 @@ async fn handle_connection(
     let request: IpcRequest = serde_json::from_str(line.trim())?;
     let request_id = request.id.clone();
 
-    log_important!(info, "收到 IPC 请求: {}，等待挂起槽位...", request_id);
+    log_important!(info, "收到 IPC 请求: {}，设置挂起请求", request_id);
 
-    // 等待挂起槽位空闲，然后原子地设置（不会覆盖正在处理的请求）
-    let response_rx = match state.wait_and_set_pending(request.clone()).await {
-        Some(rx) => rx,
-        None => {
-            // 等待超时
-            let ipc_response = IpcResponse {
-                id: request_id,
-                response: String::new(),
-                success: false,
-                error: Some("等待处理超时，当前有其他请求正在等待用户响应".to_string()),
-            };
-            let response_json = serde_json::to_string(&ipc_response)?;
-            writer.write_all(response_json.as_bytes()).await?;
-            writer.write_all(b"\n").await?;
-            writer.flush().await?;
-            return Ok(());
-        }
-    };
+    // 直接设置挂起请求（支持多请求并发）
+    let response_rx = state.set_pending(request.clone()).await;
 
-    log_important!(info, "请求 {} 已获得挂起槽位，通知前端", request_id);
+    log_important!(info, "请求 {} 已设置挂起，通知前端", request_id);
 
     // 通知前端有新请求
     let _ = state.get_request_tx().send(request).await;

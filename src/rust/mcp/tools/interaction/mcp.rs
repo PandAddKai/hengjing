@@ -1,9 +1,9 @@
 use anyhow::Result;
-use rmcp::{Error as McpError, model::*};
+use rmcp::{model::*, Error as McpError};
 
-use crate::mcp::{HengRequest, PopupRequest};
 use crate::mcp::handlers::{create_tauri_popup, parse_mcp_response};
 use crate::mcp::utils::{generate_request_id, popup_error};
+use crate::mcp::{HengRequest, PopupRequest};
 
 /// 智能代码审查交互工具
 ///
@@ -12,9 +12,7 @@ use crate::mcp::utils::{generate_request_id, popup_error};
 pub struct InteractionTool;
 
 impl InteractionTool {
-    pub async fn heng(
-        request: HengRequest,
-    ) -> Result<CallToolResult, McpError> {
+    pub async fn heng(request: HengRequest) -> Result<CallToolResult, McpError> {
         let popup_request = PopupRequest {
             id: generate_request_id(),
             message: request.message,
@@ -35,14 +33,13 @@ impl InteractionTool {
                 content.push(Content::text(
                     "\n---\n【系统指令】以上是用户通过弹窗的回复。\
                      请根据回复继续工作。完成后、结束回复前，必须再次调用 heng 工具。\
-                     禁止不调用 heng 就结束回合。".to_string()
+                     禁止不调用 heng 就结束回合。"
+                        .to_string(),
                 ));
 
                 Ok(CallToolResult::success(content))
             }
-            Err(e) => {
-                Err(popup_error(e.to_string()).into())
-            }
+            Err(e) => Err(popup_error(e.to_string()).into()),
         }
     }
 }

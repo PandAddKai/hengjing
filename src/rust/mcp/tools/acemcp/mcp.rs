@@ -8,15 +8,15 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
+use encoding_rs::{GBK, UTF_8, WINDOWS_1252};
+use globset::{Glob, GlobSet, GlobSetBuilder};
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Client;
 use ring::digest::{Context as ShaContext, SHA256};
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use serde::{Deserialize, Serialize};
-use encoding_rs::{GBK, WINDOWS_1252, UTF_8};
-use globset::{Glob, GlobSet, GlobSetBuilder};
 
-use super::types::{AcemcpRequest, AcemcpConfig};
+use super::types::{AcemcpConfig, AcemcpRequest};
 use crate::log_debug;
 use crate::log_important;
 
@@ -26,9 +26,11 @@ pub struct AcemcpTool;
 impl AcemcpTool {
     /// 执行代码库搜索
     pub async fn search_context(request: AcemcpRequest) -> Result<CallToolResult, McpError> {
-        log_important!(info,
+        log_important!(
+            info,
             "Acemcp搜索请求: project_root_path={}, query={}",
-            request.project_root_path, request.query
+            request.project_root_path,
+            request.query
         );
 
         // 读取配置
@@ -44,8 +46,14 @@ impl AcemcpTool {
 
         // 执行：增量索引（含批量上传）+ 检索
         match index_and_search(&acemcp_config, &request.project_root_path, &request.query).await {
-            Ok(text) => Ok(CallToolResult { content: vec![Content::text(text)], is_error: None }),
-            Err(e) => Ok(CallToolResult { content: vec![Content::text(format!("Acemcp执行失败: {}", e))], is_error: Some(true) })
+            Ok(text) => Ok(CallToolResult {
+                content: vec![Content::text(text)],
+                is_error: None,
+            }),
+            Err(e) => Ok(CallToolResult {
+                content: vec![Content::text(format!("Acemcp执行失败: {}", e))],
+                is_error: Some(true),
+            }),
         }
     }
 
@@ -54,7 +62,7 @@ impl AcemcpTool {
         // 从配置文件中读取acemcp配置
         let config = crate::config::load_standalone_config()
             .map_err(|e| anyhow::anyhow!("读取配置文件失败: {}", e))?;
-        
+
         Ok(AcemcpConfig {
             base_url: config.mcp_config.acemcp_base_url,
             token: config.mcp_config.acemcp_token,
@@ -113,18 +121,24 @@ fn normalize_base_url(input: &str) -> String {
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         url = format!("http://{}", url);
     }
-    while url.ends_with('/') { url.pop(); }
+    while url.ends_with('/') {
+        url.pop();
+    }
     url
 }
 
-async fn retry_request<F, Fut, T>(mut f: F, max_retries: usize, base_delay_secs: f64) -> anyhow::Result<T>
+async fn retry_request<F, Fut, T>(
+    mut f: F,
+    max_retries: usize,
+    base_delay_secs: f64,
+) -> anyhow::Result<T>
 where
     F: FnMut() -> Fut,
     Fut: std::future::Future<Output = anyhow::Result<T>>,
 {
     let mut attempt = 0usize;
     let mut last_error_str: Option<String> = None;
-    
+
     while attempt < max_retries {
         match f().await {
             Ok(v) => {
@@ -136,27 +150,33 @@ where
             Err(e) => {
                 last_error_str = Some(e.to_string());
                 attempt += 1;
-                
+
                 // 检查是否为可重试的错误
                 let error_str = e.to_string();
-                let is_retryable = error_str.contains("timeout") 
-                    || error_str.contains("connection") 
+                let is_retryable = error_str.contains("timeout")
+                    || error_str.contains("connection")
                     || error_str.contains("network")
                     || error_str.contains("temporary");
-                
+
                 if attempt >= max_retries || !is_retryable {
                     log_debug!("请求失败，不再重试: {}", e);
                     return Err(e);
                 }
-                
+
                 let delay = base_delay_secs * 2f64.powi((attempt as i32) - 1);
                 let ms = (delay * 1000.0) as u64;
-                log_debug!("请求失败，准备重试({}/{}), 等待 {}ms: {}", attempt, max_retries, ms, e);
+                log_debug!(
+                    "请求失败，准备重试({}/{}), 等待 {}ms: {}",
+                    attempt,
+                    max_retries,
+                    ms,
+                    e
+                );
                 tokio::time::sleep(Duration::from_millis(ms)).await;
             }
         }
     }
-    
+
     Err(last_error_str
         .and_then(|s| anyhow::anyhow!(s).into())
         .unwrap_or_else(|| anyhow::anyhow!("未知错误")))
@@ -223,10 +243,13 @@ fn sha256_hex(path: &str, content: &str) -> String {
 fn split_content(path: &str, content: &str, max_lines: usize) -> Vec<BlobItem> {
     let lines: Vec<&str> = content.split_inclusive('\n').collect();
     let total_lines = lines.len();
-    
+
     // 如果文件在限制内，返回单个 blob
     if total_lines <= max_lines {
-        return vec![BlobItem { path: path.to_string(), content: content.to_string() }];
+        return vec![BlobItem {
+            path: path.to_string(),
+            content: content.to_string(),
+        }];
     }
 
     // 计算需要的 chunk 数量
@@ -242,7 +265,10 @@ fn split_content(path: &str, content: &str, max_lines: usize) -> Vec<BlobItem> {
 
         // chunk 编号从 1 开始（与 Python 版本保持一致）
         let chunk_path = format!("{}#chunk{}of{}", path, chunk_idx + 1, num_chunks);
-        blobs.push(BlobItem { path: chunk_path, content: chunk_content });
+        blobs.push(BlobItem {
+            path: chunk_path,
+            content: chunk_content,
+        });
     }
 
     blobs
@@ -259,7 +285,9 @@ fn build_exclude_globset(exclude_patterns: &[String]) -> Result<GlobSet> {
             log_debug!("无效的排除模式，跳过: {}", pattern);
         }
     }
-    builder.build().map_err(|e| anyhow::anyhow!("构建排除模式失败: {}", e))
+    builder
+        .build()
+        .map_err(|e| anyhow::anyhow!("构建排除模式失败: {}", e))
 }
 
 /// 检查路径是否应该被排除
@@ -279,7 +307,7 @@ fn should_exclude(path: &Path, root: &Path, exclude_globset: Option<&GlobSet>) -
 
     // 转换为使用正斜杠的字符串（用于匹配）
     let rel_forward = rel.to_string_lossy().replace('\\', "/");
-    
+
     // 检查完整相对路径（与 Python 版本的 fnmatch(path_str, pattern) 一致）
     if globset.is_match(&rel_forward) {
         return true;
@@ -301,18 +329,36 @@ fn build_gitignore(root: &Path) -> Option<Gitignore> {
     let mut builder = GitignoreBuilder::new(root);
     let gi_path = root.join(".gitignore");
     if gi_path.exists() {
-        if builder.add(gi_path).is_some() { return None; }
-        return match builder.build() { Ok(gi) => Some(gi), Err(_) => None };
+        if builder.add(gi_path).is_some() {
+            return None;
+        }
+        return match builder.build() {
+            Ok(gi) => Some(gi),
+            Err(_) => None,
+        };
     }
     None
 }
 
-fn collect_blobs(root: &str, text_exts: &[String], exclude_patterns: &[String], max_lines_per_blob: usize) -> anyhow::Result<Vec<BlobItem>> {
+fn collect_blobs(
+    root: &str,
+    text_exts: &[String],
+    exclude_patterns: &[String],
+    max_lines_per_blob: usize,
+) -> anyhow::Result<Vec<BlobItem>> {
     let root_path = PathBuf::from(root);
-    if !root_path.exists() { anyhow::bail!("项目根目录不存在: {}", root); }
-    
-    log_important!(info, "开始收集代码文件: 根目录={}, 扩展名={:?}, 排除模式={:?}", root, text_exts, exclude_patterns);
-    
+    if !root_path.exists() {
+        anyhow::bail!("项目根目录不存在: {}", root);
+    }
+
+    log_important!(
+        info,
+        "开始收集代码文件: 根目录={}, 扩展名={:?}, 排除模式={:?}",
+        root,
+        text_exts,
+        exclude_patterns
+    );
+
     // 构建排除模式的 GlobSet
     let exclude_globset = if exclude_patterns.is_empty() {
         None
@@ -325,24 +371,29 @@ fn collect_blobs(root: &str, text_exts: &[String], exclude_patterns: &[String], 
             }
         }
     };
-    
+
     let mut out = Vec::new();
     let gitignore = build_gitignore(&root_path);
     let mut dirs_stack = vec![root_path.clone()];
     let mut scanned_files = 0;
     let mut indexed_files = 0;
     let mut excluded_count = 0;
-    
+
     while let Some(dir) = dirs_stack.pop() {
-        let entries = match fs::read_dir(&dir) { Ok(e) => e, Err(_) => continue };
+        let entries = match fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
         for entry in entries.flatten() {
             let p = entry.path();
-            
+
             // 检查 .gitignore
             if let Some(gi) = &gitignore {
-                if gi.matched_path_or_any_parents(&p, p.is_dir()).is_ignore() { continue; }
+                if gi.matched_path_or_any_parents(&p, p.is_dir()).is_ignore() {
+                    continue;
+                }
             }
-            
+
             // 检查排除模式
             if p.is_dir() {
                 if should_exclude(&p, &root_path, exclude_globset.as_ref()) {
@@ -352,55 +403,88 @@ fn collect_blobs(root: &str, text_exts: &[String], exclude_patterns: &[String], 
                 dirs_stack.push(p);
                 continue;
             }
-            
+
             scanned_files += 1;
             if should_exclude(&p, &root_path, exclude_globset.as_ref()) {
                 excluded_count += 1;
                 log_debug!("排除文件: {:?}", p);
                 continue;
             }
-            
+
             // 检查文件扩展名
-            let ext_ok = p.extension().and_then(|s| s.to_str()).map(|e| {
-                let dot = format!(".{}", e).to_lowercase();
-                text_exts.iter().any(|te| te.eq_ignore_ascii_case(&dot))
-            }).unwrap_or(false);
-            if !ext_ok { continue; }
-            
+            let ext_ok = p
+                .extension()
+                .and_then(|s| s.to_str())
+                .map(|e| {
+                    let dot = format!(".{}", e).to_lowercase();
+                    text_exts.iter().any(|te| te.eq_ignore_ascii_case(&dot))
+                })
+                .unwrap_or(false);
+            if !ext_ok {
+                continue;
+            }
+
             // 读取文件内容（使用多编码支持）
-            let rel = p.strip_prefix(&root_path).unwrap_or(&p).to_string_lossy().replace('\\', "/");
+            let rel = p
+                .strip_prefix(&root_path)
+                .unwrap_or(&p)
+                .to_string_lossy()
+                .replace('\\', "/");
             if let Some(content) = read_file_with_encoding(&p) {
                 let parts = split_content(&rel, &content, max_lines_per_blob);
                 let blob_count = parts.len();
                 indexed_files += 1;
                 out.extend(parts);
-                log_important!(info, "索引文件: path={}, content_length={}, blobs={}", rel, content.len(), blob_count);
+                log_important!(
+                    info,
+                    "索引文件: path={}, content_length={}, blobs={}",
+                    rel,
+                    content.len(),
+                    blob_count
+                );
             } else {
                 log_debug!("无法读取文件: {:?}", p);
             }
         }
     }
-    
-    log_important!(info, "文件收集完成: 扫描文件数={}, 索引文件数={}, 生成blobs数={}, 排除文件/目录数={}", scanned_files, indexed_files, out.len(), excluded_count);
+
+    log_important!(
+        info,
+        "文件收集完成: 扫描文件数={}, 索引文件数={}, 生成blobs数={}, 排除文件/目录数={}",
+        scanned_files,
+        indexed_files,
+        out.len(),
+        excluded_count
+    );
     Ok(out)
 }
 
-async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query: &str) -> anyhow::Result<String> {
-    let base_url = config.base_url.clone().ok_or_else(|| anyhow::anyhow!("未配置 base_url"))?;
+async fn index_and_search(
+    config: &AcemcpConfig,
+    project_root_path: &str,
+    query: &str,
+) -> anyhow::Result<String> {
+    let base_url = config
+        .base_url
+        .clone()
+        .ok_or_else(|| anyhow::anyhow!("未配置 base_url"))?;
     // 严格校验 base_url
     let has_scheme = base_url.starts_with("http://") || base_url.starts_with("https://");
     let has_host = base_url.trim().len() > "https://".len();
-    if !has_scheme || !has_host { anyhow::bail!("无效的 base_url，请填写完整的 http(s)://host[:port] 格式"); }
-    let token = config.token.clone().ok_or_else(|| anyhow::anyhow!("未配置 token"))?;
+    if !has_scheme || !has_host {
+        anyhow::bail!("无效的 base_url，请填写完整的 http(s)://host[:port] 格式");
+    }
+    let token = config
+        .token
+        .clone()
+        .ok_or_else(|| anyhow::anyhow!("未配置 token"))?;
     let batch_size = config.batch_size.unwrap_or(10) as usize;
     let max_lines = config.max_lines_per_blob.unwrap_or(800) as usize;
     let text_exts = config.text_extensions.clone().unwrap_or_default();
     let exclude_patterns = config.exclude_patterns.clone().unwrap_or_default();
 
     // 日志：基础配置
-    log_important!(info,
-        "=== 开始索引代码库 ==="
-    );
+    log_important!(info, "=== 开始索引代码库 ===");
     log_important!(info,
         "Acemcp配置: base_url={}, batch_size={}, max_lines_per_blob={}, text_exts数量={}, exclude_patterns数量={}",
         base_url,
@@ -409,44 +493,66 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
         text_exts.len(),
         exclude_patterns.len()
     );
-    log_important!(info,
-        "项目路径: {}", project_root_path
-    );
+    log_important!(info, "项目路径: {}", project_root_path);
 
     // 收集 blob（根据扩展名与排除规则，简化版 .gitignore 支持）
     log_important!(info, "开始收集代码文件...");
     let blobs = collect_blobs(project_root_path, &text_exts, &exclude_patterns, max_lines)?;
-    if blobs.is_empty() { anyhow::bail!("未在项目中找到可索引的文本文件"); }
+    if blobs.is_empty() {
+        anyhow::bail!("未在项目中找到可索引的文本文件");
+    }
 
     // 加载 projects.json
     let projects_path = home_projects_file();
     let mut projects: ProjectsFile = if projects_path.exists() {
         let data = fs::read_to_string(&projects_path).unwrap_or_default();
         serde_json::from_str(&data).unwrap_or_default()
-    } else { ProjectsFile::default() };
+    } else {
+        ProjectsFile::default()
+    };
 
-    let normalized_root = PathBuf::from(project_root_path).canonicalize().unwrap_or_else(|_| PathBuf::from(project_root_path)).to_string_lossy().replace('\\', "/");
-    let existing_blob_names: std::collections::HashSet<String> = projects.0.get(&normalized_root).cloned().unwrap_or_default().into_iter().collect();
+    let normalized_root = PathBuf::from(project_root_path)
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from(project_root_path))
+        .to_string_lossy()
+        .replace('\\', "/");
+    let existing_blob_names: std::collections::HashSet<String> = projects
+        .0
+        .get(&normalized_root)
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
 
     // 计算所有 blob 的哈希值，建立哈希到 blob 的映射
-    let mut blob_hash_map: std::collections::HashMap<String, BlobItem> = std::collections::HashMap::new();
+    let mut blob_hash_map: std::collections::HashMap<String, BlobItem> =
+        std::collections::HashMap::new();
     for blob in &blobs {
         let hash = sha256_hex(&blob.path, &blob.content);
         blob_hash_map.insert(hash.clone(), blob.clone());
     }
 
     // 分离已存在和新增加的 blob（与 Python 版本保持一致）
-    let all_blob_hashes: std::collections::HashSet<String> = blob_hash_map.keys().cloned().collect();
-    let existing_hashes: std::collections::HashSet<String> = all_blob_hashes.intersection(&existing_blob_names).cloned().collect();
-    let new_hashes: std::collections::HashSet<String> = all_blob_hashes.difference(&existing_blob_names).cloned().collect();
+    let all_blob_hashes: std::collections::HashSet<String> =
+        blob_hash_map.keys().cloned().collect();
+    let existing_hashes: std::collections::HashSet<String> = all_blob_hashes
+        .intersection(&existing_blob_names)
+        .cloned()
+        .collect();
+    let new_hashes: std::collections::HashSet<String> = all_blob_hashes
+        .difference(&existing_blob_names)
+        .cloned()
+        .collect();
 
     // 需要上传的新 blob
-    let new_blobs: Vec<BlobItem> = new_hashes.iter().filter_map(|h| blob_hash_map.get(h).cloned()).collect();
+    let new_blobs: Vec<BlobItem> = new_hashes
+        .iter()
+        .filter_map(|h| blob_hash_map.get(h).cloned())
+        .collect();
 
-    log_important!(info,
-        "=== 索引统计 ==="
-    );
-    log_important!(info,
+    log_important!(info, "=== 索引统计 ===");
+    log_important!(
+        info,
         "收集到blobs总数: {}, 既有blobs: {}, 新增blobs: {}, 需要上传: {}",
         blobs.len(),
         existing_hashes.len(),
@@ -459,37 +565,38 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
     // 批量上传新增 blobs
     let mut uploaded_names: Vec<String> = Vec::new();
     let mut failed_batches: Vec<usize> = Vec::new();
-    
+
     if !new_blobs.is_empty() {
         let total_batches = (new_blobs.len() + batch_size - 1) / batch_size;
-        log_important!(info,
-            "=== 开始批量上传代码索引 ==="
-        );
-        log_important!(info,
+        log_important!(info, "=== 开始批量上传代码索引 ===");
+        log_important!(
+            info,
             "目标端点: {}/batch-upload, 总批次: {}, 每批上限: {}, 总blobs: {}",
             base_url,
             total_batches,
             batch_size,
             new_blobs.len()
         );
-        
+
         for i in 0..total_batches {
             let start = i * batch_size;
             let end = usize::min(start + batch_size, new_blobs.len());
             let batch = &new_blobs[start..end];
             let url = format!("{}/batch-upload", base_url);
-            
-            log_important!(info,
+
+            log_important!(
+                info,
                 "上传批次 {}/{}: url={}, blobs={}",
                 i + 1,
                 total_batches,
                 url,
                 batch.len()
             );
-            
+
             // 详细记录每个 blob 的信息
             for (idx, blob) in batch.iter().enumerate() {
-                log_important!(info,
+                log_important!(
+                    info,
                     "  批次 {} - Blob {}/{}: path={}, content_length={}",
                     i + 1,
                     idx + 1,
@@ -498,49 +605,71 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
                     blob.content.len()
                 );
             }
-            
+
             let payload = serde_json::json!({"blobs": batch});
             log_important!(info, "批次载荷大小: {} 字节", payload.to_string().len());
-            
-            match retry_request(|| async {
-                let r = client
-                    .post(&url)
-                    .header(AUTHORIZATION, format!("Bearer {}", token))
-                    .header(CONTENT_TYPE, "application/json")
-                    .json(&payload)
-                    .send()
-                    .await?;
-                
-                let status = r.status();
-                log_important!(info, "HTTP响应状态: {}", status);
-                
-                if !status.is_success() {
-                    let body = r.text().await.unwrap_or_default();
-                    anyhow::bail!("HTTP {} {}", status, body);
-                }
-                
-                let v: serde_json::Value = r.json().await?;
-                log_important!(info, "响应数据: {}", serde_json::to_string_pretty(&v).unwrap_or_default());
-                Ok(v)
-            }, 3, 1.0).await {
+
+            match retry_request(
+                || async {
+                    let r = client
+                        .post(&url)
+                        .header(AUTHORIZATION, format!("Bearer {}", token))
+                        .header(CONTENT_TYPE, "application/json")
+                        .json(&payload)
+                        .send()
+                        .await?;
+
+                    let status = r.status();
+                    log_important!(info, "HTTP响应状态: {}", status);
+
+                    if !status.is_success() {
+                        let body = r.text().await.unwrap_or_default();
+                        anyhow::bail!("HTTP {} {}", status, body);
+                    }
+
+                    let v: serde_json::Value = r.json().await?;
+                    log_important!(
+                        info,
+                        "响应数据: {}",
+                        serde_json::to_string_pretty(&v).unwrap_or_default()
+                    );
+                    Ok(v)
+                },
+                3,
+                1.0,
+            )
+            .await
+            {
                 Ok(value) => {
                     if let Some(arr) = value.get("blob_names").and_then(|v| v.as_array()) {
                         let mut batch_names: Vec<String> = Vec::new();
-                        for v in arr { 
-                            if let Some(s) = v.as_str() { 
-                                batch_names.push(s.to_string()); 
+                        for v in arr {
+                            if let Some(s) = v.as_str() {
+                                batch_names.push(s.to_string());
                             }
                         }
-                        
+
                         if batch_names.is_empty() {
                             log_important!(info, "批次 {} 返回了空的blob名称列表", i + 1);
                             failed_batches.push(i + 1);
                         } else {
                             uploaded_names.extend(batch_names.clone());
-                            log_important!(info, "批次 {} 上传成功，获得 {} 个blob名称", i + 1, batch_names.len());
+                            log_important!(
+                                info,
+                                "批次 {} 上传成功，获得 {} 个blob名称",
+                                i + 1,
+                                batch_names.len()
+                            );
                             // 详细记录每个上传成功的 blob 名称
                             for (idx, name) in batch_names.iter().enumerate() {
-                                log_important!(info, "  批次 {} - 上传成功 Blob {}/{}: name={}", i + 1, idx + 1, batch_names.len(), name);
+                                log_important!(
+                                    info,
+                                    "  批次 {} - 上传成功 Blob {}/{}: name={}",
+                                    i + 1,
+                                    idx + 1,
+                                    batch_names.len(),
+                                    name
+                                );
                             }
                         }
                     } else {
@@ -554,15 +683,22 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
                 }
             }
         }
-        
+
         // 上传结果总结
-        log_important!(info,
-            "=== 上传结果总结 ==="
-        );
+        log_important!(info, "=== 上传结果总结 ===");
         if !failed_batches.is_empty() {
-            log_important!(info, "上传完成，但有失败的批次: {:?}, 成功上传blobs: {}", failed_batches, uploaded_names.len());
+            log_important!(
+                info,
+                "上传完成，但有失败的批次: {:?}, 成功上传blobs: {}",
+                failed_batches,
+                uploaded_names.len()
+            );
         } else {
-            log_important!(info, "所有批次上传成功，共上传 {} 个blobs", uploaded_names.len());
+            log_important!(
+                info,
+                "所有批次上传成功，共上传 {} 个blobs",
+                uploaded_names.len()
+            );
         }
     } else {
         log_important!(info, "没有新的blob需要上传，使用已有索引");
@@ -570,24 +706,35 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
 
     // 合并并保存 projects.json（与 Python 版本保持一致）
     // 只保留当前项目中仍然存在的 blob 的哈希值（自动删除已删除的 blob）
-    let all_blob_names: Vec<String> = existing_hashes.into_iter().chain(uploaded_names.into_iter()).collect();
-    projects.0.insert(normalized_root.clone(), all_blob_names.clone());
-    if let Ok(s) = serde_json::to_string_pretty(&projects) { let _ = fs::write(projects_path, s); }
+    let all_blob_names: Vec<String> = existing_hashes
+        .into_iter()
+        .chain(uploaded_names.into_iter())
+        .collect();
+    projects
+        .0
+        .insert(normalized_root.clone(), all_blob_names.clone());
+    if let Ok(s) = serde_json::to_string_pretty(&projects) {
+        let _ = fs::write(projects_path, s);
+    }
 
     // 使用合并后的 blob_names（与 Python 版本保持一致）
     let blob_names = all_blob_names;
-    if blob_names.is_empty() { 
+    if blob_names.is_empty() {
         log_important!(info, "索引后未找到 blobs，项目路径: {}", normalized_root);
-        anyhow::bail!("索引后未找到 blobs"); 
+        anyhow::bail!("索引后未找到 blobs");
     }
 
     // 发起检索
-    log_important!(info,
-        "=== 开始代码检索 ==="
-    );
+    log_important!(info, "=== 开始代码检索 ===");
     let search_url = format!("{}/agents/codebase-retrieval", base_url);
-    log_important!(info, "检索请求: url={}, 使用blobs数量={}, 查询内容={}", search_url, blob_names.len(), query);
-    
+    log_important!(
+        info,
+        "检索请求: url={}, 使用blobs数量={}, 查询内容={}",
+        search_url,
+        blob_names.len(),
+        query
+    );
+
     let payload = serde_json::json!({
         "information_request": query,
         "blobs": {"checkpoint_id": serde_json::Value::Null, "added_blobs": blob_names, "deleted_blobs": []},
@@ -596,42 +743,51 @@ async fn index_and_search(config: &AcemcpConfig, project_root_path: &str, query:
         "disable_codebase_retrieval": false,
         "enable_commit_retrieval": false,
     });
-    
+
     log_important!(info, "检索载荷大小: {} 字节", payload.to_string().len());
-    
-    let value: serde_json::Value = retry_request(|| async {
-        let r = client
-            .post(&search_url)
-            .header(AUTHORIZATION, format!("Bearer {}", token))
-            .header(CONTENT_TYPE, "application/json")
-            .json(&payload)
-            .send()
-            .await?;
-        
-        let status = r.status();
-        log_important!(info, "检索请求HTTP响应状态: {}", status);
-        
-        if !status.is_success() {
-            let body = r.text().await.unwrap_or_default();
-            anyhow::bail!("HTTP {} {}", status, body);
-        }
-        
-        let v: serde_json::Value = r.json().await?;
-        log_important!(info, "检索响应数据: {}", serde_json::to_string_pretty(&v).unwrap_or_default());
-        Ok(v)
-    }, 3, 2.0).await?;
-    
+
+    let value: serde_json::Value = retry_request(
+        || async {
+            let r = client
+                .post(&search_url)
+                .header(AUTHORIZATION, format!("Bearer {}", token))
+                .header(CONTENT_TYPE, "application/json")
+                .json(&payload)
+                .send()
+                .await?;
+
+            let status = r.status();
+            log_important!(info, "检索请求HTTP响应状态: {}", status);
+
+            if !status.is_success() {
+                let body = r.text().await.unwrap_or_default();
+                anyhow::bail!("HTTP {} {}", status, body);
+            }
+
+            let v: serde_json::Value = r.json().await?;
+            log_important!(
+                info,
+                "检索响应数据: {}",
+                serde_json::to_string_pretty(&v).unwrap_or_default()
+            );
+            Ok(v)
+        },
+        3,
+        2.0,
+    )
+    .await?;
+
     let text = value
         .get("formatted_retrieval")
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-        
-    if text.is_empty() { 
+
+    if text.is_empty() {
         log_important!(info, "搜索返回空结果");
-        Ok("No relevant code context found for your query.".to_string()) 
-    } else { 
+        Ok("No relevant code context found for your query.".to_string())
+    } else {
         log_important!(info, "搜索成功，返回文本长度: {}", text.len());
-        Ok(text) 
+        Ok(text)
     }
 }

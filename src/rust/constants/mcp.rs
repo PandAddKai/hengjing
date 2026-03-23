@@ -74,7 +74,7 @@ impl Default for McpConfig {
             tools: vec![
                 McpToolConfig::new(TOOL_HENG, true, false), // 恒境工具不可禁用
                 McpToolConfig::new(TOOL_JI, false, true),   // 记忆管理工具可禁用，默认关闭
-                McpToolConfig::new(TOOL_SOU, false, true), // 代码搜索工具可禁用，默认关闭
+                McpToolConfig::new(TOOL_SOU, false, true),  // 代码搜索工具可禁用，默认关闭
             ],
             continue_reply_enabled: DEFAULT_CONTINUE_REPLY_ENABLED,
             auto_continue_threshold: DEFAULT_AUTO_CONTINUE_THRESHOLD,

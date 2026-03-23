@@ -24,12 +24,8 @@ export const CORE_RULES = `- 除非特别说明否则不要创建文档、不要
 export const PROMPT_SECTIONS = {
   // Heng 工具（恒境）提示词
   heng: {
-    base: `- 【强制】只能通过MCP \`heng\` 工具与用户交流，禁止直接结束回合
-- 【强制】每次回合结束前必须调用 \`heng\` 工具，无例外`,
-    detail: `heng 工具规则：
-- heng 是与用户沟通的唯一通道
-- 每完成一个步骤后调用 \`heng\` 汇报进展
-- 未通过 \`heng\` 收到用户明确表示"结束"前，禁止终止回合`,
+    base: ``,
+    detail: ``,
   } as PromptSection,
 
   // 记忆管理工具提示词

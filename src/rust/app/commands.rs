@@ -9,12 +9,6 @@ pub use crate::telegram::handle_telegram_only_mcp_request;
 
 // UI 命令
 pub use crate::ui::{
-    commands::*,
+    audio::*, audio_assets::*, commands::*, exit::*, exit_handler::*, font_commands::*, updater::*,
     window::*,
-    audio::*,
-    audio_assets::*,
-    font_commands::*,
-    updater::*,
-    exit::*,
-    exit_handler::*,
 };

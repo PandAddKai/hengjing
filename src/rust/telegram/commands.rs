@@ -1,9 +1,7 @@
 use crate::config::{save_config, AppState, TelegramConfig};
 use crate::constants::telegram as telegram_constants;
-use crate::telegram::{
-    handle_callback_query, handle_text_message, TelegramCore,
-};
 use crate::log_important;
+use crate::telegram::{handle_callback_query, handle_text_message, TelegramCore};
 use tauri::{AppHandle, Emitter, Manager, State};
 use teloxide::prelude::*;
 
@@ -63,20 +61,21 @@ pub async fn test_telegram_connection_cmd(
         Some(api_url.as_str())
     };
 
-    crate::telegram::core::test_telegram_connection_with_api_url(&bot_token, &chat_id, api_url_option)
-        .await
-        .map_err(|e| e.to_string())
+    crate::telegram::core::test_telegram_connection_with_api_url(
+        &bot_token,
+        &chat_id,
+        api_url_option,
+    )
+    .await
+    .map_err(|e| e.to_string())
 }
 
 /// 自动获取Chat ID（通过监听Bot消息）
 #[tauri::command]
-pub async fn auto_get_chat_id(
-    bot_token: String,
-    app_handle: AppHandle,
-) -> Result<(), String> {
+pub async fn auto_get_chat_id(bot_token: String, app_handle: AppHandle) -> Result<(), String> {
     // 获取API URL配置
     let mut bot = Bot::new(bot_token.clone());
-    
+
     if let Some(state) = app_handle.try_state::<AppState>() {
         if let Ok(config) = state.config.lock() {
             let api_url = &config.telegram_config.api_base_url;
@@ -106,7 +105,9 @@ pub async fn auto_get_chat_id(
                         if let teloxide::types::UpdateKind::Message(message) = update.kind {
                             let chat_id = message.chat.id.0.to_string();
                             let chat_title = message.chat.title().unwrap_or("私聊").to_string();
-                            let username = message.from.as_ref()
+                            let username = message
+                                .from
+                                .as_ref()
                                 .and_then(|u| u.username.as_ref())
                                 .map(|s| s.as_str())
                                 .unwrap_or("未知用户");
@@ -274,7 +275,7 @@ async fn start_telegram_listener(
                 .lock()
                 .map_err(|e| format!("获取配置失败: {}", e))?;
             let api_url = config.telegram_config.api_base_url.clone();
-                         if api_url == telegram_constants::API_BASE_URL {
+            if api_url == telegram_constants::API_BASE_URL {
                 None
             } else {
                 Some(api_url)
@@ -352,7 +353,8 @@ async fn start_telegram_listener(
                                                 &predefined_options,
                                                 &selected_vec,
                                             )
-                                            .await {}
+                                            .await
+                                        {}
                                     }
                                 }
                             }

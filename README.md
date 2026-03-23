@@ -120,6 +120,11 @@ sudo chmod +x /usr/local/bin/恒境 /usr/local/bin/等
 
 ## 🛠️ 本地开发
 
+环境要求：
+- Node.js `>= 18.18.0`
+- pnpm `10.x`
+- Rust 工具链（用于 Tauri）
+
 ```bash
 git clone https://github.com/PandAddKai/hengjing.git
 cd hengjing

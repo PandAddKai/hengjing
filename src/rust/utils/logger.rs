@@ -1,9 +1,9 @@
+use env_logger::{Builder, Target};
+use log::LevelFilter;
 use std::env;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Once;
-use log::LevelFilter;
-use env_logger::{Builder, Target};
 
 static INIT: Once = Once::new();
 
@@ -32,10 +32,10 @@ impl Default for LogConfig {
 pub fn init_logger(config: LogConfig) -> Result<(), Box<dyn std::error::Error>> {
     INIT.call_once(|| {
         let mut builder = Builder::new();
-        
+
         // 设置日志级别
         builder.filter_level(config.level);
-        
+
         // 设置日志格式
         builder.format(|buf, record| {
             let log_line = format!(
@@ -45,22 +45,18 @@ pub fn init_logger(config: LogConfig) -> Result<(), Box<dyn std::error::Error>> 
                 record.module_path().unwrap_or("unknown"),
                 record.args()
             );
-            
+
             // 写入到原始目标（stderr 或文件）
             writeln!(buf, "{}", log_line)?;
-            
+
             Ok(())
         });
-        
+
         // 根据模式设置输出目标
         if config.is_mcp_mode {
             // MCP 模式：只输出到文件，不输出到 stderr
             if let Some(file_path) = &config.file_path {
-                if let Ok(log_file) = OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(file_path) 
-                {
+                if let Ok(log_file) = OpenOptions::new().create(true).append(true).open(file_path) {
                     builder.target(Target::Pipe(Box::new(log_file)));
                 } else {
                     // 如果文件打开失败，禁用日志输出
@@ -74,11 +70,7 @@ pub fn init_logger(config: LogConfig) -> Result<(), Box<dyn std::error::Error>> 
             // 非 MCP 模式：如果指定了文件路径，同时输出到文件和 stderr
             if let Some(file_path) = &config.file_path {
                 // 尝试打开文件，如果成功则同时输出到文件和 stderr
-                if let Ok(log_file) = OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(file_path) 
-                {
+                if let Ok(log_file) = OpenOptions::new().create(true).append(true).open(file_path) {
                     // 使用自定义目标，同时写入文件和 stderr
                     use std::io::Write;
                     struct DualWriter {
@@ -105,10 +97,10 @@ pub fn init_logger(config: LogConfig) -> Result<(), Box<dyn std::error::Error>> 
                 builder.target(Target::Stderr);
             }
         }
-        
+
         builder.init();
     });
-    
+
     Ok(())
 }
 
@@ -116,15 +108,17 @@ pub fn init_logger(config: LogConfig) -> Result<(), Box<dyn std::error::Error>> 
 pub fn auto_init_logger() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let is_mcp_mode = args.len() >= 3 && args[1] == "--mcp-request";
-    
+
     let config = if is_mcp_mode {
         // MCP 模式：输出到文件
-        let log_file_path = env::var("MCP_LOG_FILE")
-            .unwrap_or_else(|_| {
-                let temp_dir = env::temp_dir();
-                temp_dir.join("continuum-mcp.log").to_string_lossy().to_string()
-            });
-            
+        let log_file_path = env::var("MCP_LOG_FILE").unwrap_or_else(|_| {
+            let temp_dir = env::temp_dir();
+            temp_dir
+                .join("continuum-mcp.log")
+                .to_string_lossy()
+                .to_string()
+        });
+
         LogConfig {
             level: env::var("RUST_LOG")
                 .unwrap_or_else(|_| "warn".to_string())
@@ -144,7 +138,7 @@ pub fn auto_init_logger() -> Result<(), Box<dyn std::error::Error>> {
             is_mcp_mode: false,
         }
     };
-    
+
     init_logger(config)
 }
 
@@ -181,8 +175,7 @@ macro_rules! log_trace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
-    
+
     #[test]
     fn test_log_config_default() {
         let config = LogConfig::default();
@@ -190,7 +183,7 @@ mod tests {
         assert_eq!(config.file_path, None);
         assert_eq!(config.is_mcp_mode, false);
     }
-    
+
     #[test]
     fn test_mcp_mode_detection() {
         // 这个测试需要在实际环境中运行

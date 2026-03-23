@@ -10,7 +10,7 @@ pub mod commands;
 pub mod server;
 
 pub use client::IpcClient;
-pub use commands::{IpcStateWrapper, send_ipc_response, start_ipc_server};
+pub use commands::{send_ipc_response, start_ipc_server, IpcStateWrapper};
 pub use server::{cleanup_socket, IpcServer, IpcServerState};
 
 /// IPC 请求
@@ -42,6 +42,17 @@ impl From<&crate::mcp::types::PopupRequest> for IpcRequest {
     }
 }
 
+impl From<IpcRequest> for crate::mcp::types::PopupRequest {
+    fn from(request: IpcRequest) -> Self {
+        Self {
+            id: request.id,
+            message: request.message,
+            predefined_options: request.predefined_options,
+            is_markdown: request.is_markdown,
+        }
+    }
+}
+
 /// 获取 IPC socket 路径
 #[cfg(unix)]
 pub fn get_socket_path() -> PathBuf {
@@ -53,4 +64,3 @@ pub fn get_socket_path() -> PathBuf {
 pub fn get_socket_path() -> PathBuf {
     std::env::temp_dir().join("hengjing-ui.sock")
 }
-

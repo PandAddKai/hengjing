@@ -1,8 +1,11 @@
 use anyhow::Result;
-use rmcp::{Error as McpError, model::*};
+use rmcp::{model::*, Error as McpError};
 
-use super::{MemoryManager, MemoryCategory};
-use crate::mcp::{JiyiRequest, utils::{validate_project_path, project_path_error}};
+use super::{MemoryCategory, MemoryManager};
+use crate::mcp::{
+    utils::{project_path_error, validate_project_path},
+    JiyiRequest,
+};
 
 /// 全局记忆管理工具
 ///
@@ -11,9 +14,7 @@ use crate::mcp::{JiyiRequest, utils::{validate_project_path, project_path_error}
 pub struct MemoryTool;
 
 impl MemoryTool {
-    pub async fn jiyi(
-        request: JiyiRequest,
-    ) -> Result<CallToolResult, McpError> {
+    pub async fn jiyi(request: JiyiRequest) -> Result<CallToolResult, McpError> {
         // 使用增强的路径验证功能
         if let Err(e) = validate_project_path(&request.project_path) {
             return Err(project_path_error(format!(
@@ -40,19 +41,22 @@ impl MemoryTool {
                     _ => MemoryCategory::Context,
                 };
 
-                let id = manager.add_memory(&request.content, category)
+                let id = manager
+                    .add_memory(&request.content, category)
                     .map_err(|e| McpError::internal_error(format!("添加记忆失败: {}", e), None))?;
 
-                format!("✅ 记忆已添加，ID: {}\n📝 内容: {}\n📂 分类: {:?}", id, request.content, category)
+                format!(
+                    "✅ 记忆已添加，ID: {}\n📝 内容: {}\n📂 分类: {:?}",
+                    id, request.content, category
+                )
             }
-            "回忆" => {
-                manager.get_project_info()
-                    .map_err(|e| McpError::internal_error(format!("获取项目信息失败: {}", e), None))?
-            }
+            "回忆" => manager
+                .get_project_info()
+                .map_err(|e| McpError::internal_error(format!("获取项目信息失败: {}", e), None))?,
             _ => {
                 return Err(McpError::invalid_params(
                     format!("未知的操作类型: {}", request.action),
-                    None
+                    None,
                 ));
             }
         };

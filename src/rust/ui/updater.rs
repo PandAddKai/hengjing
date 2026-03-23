@@ -1,6 +1,6 @@
-use tauri::{AppHandle, Emitter};
 use serde::{Deserialize, Serialize};
 use std::{fs, io::Write, path::PathBuf, process::Command};
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateInfo {
@@ -23,11 +23,11 @@ pub struct UpdateProgress {
 #[tauri::command]
 pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
     log::info!("🔍 开始检查更新");
-    
+
     // 由于Tauri更新器无法处理中文tag，这里直接使用GitHub API检查
     let client = reqwest::Client::new();
     log::info!("📡 发送 GitHub API 请求");
-    
+
     let response = client
         .get("https://api.github.com/repos/PandAddKai/hengjing/releases/latest")
         .header("User-Agent", "hengjing-app/1.0")
@@ -55,27 +55,21 @@ pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
         return Err(error_msg);
     }
 
-    let release: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| {
-            log::error!("❌ 解析响应失败: {}", e);
-            format!("解析响应失败: {}", e)
-        })?;
+    let release: serde_json::Value = response.json().await.map_err(|e| {
+        log::error!("❌ 解析响应失败: {}", e);
+        format!("解析响应失败: {}", e)
+    })?;
 
     log::info!("📋 成功获取 release 数据");
 
     let current_version = app.package_info().version.to_string();
     log::info!("📦 当前版本: {}", current_version);
-    
+
     // 提取最新版本号，处理中文tag
-    let tag_name = release["tag_name"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
-    
+    let tag_name = release["tag_name"].as_str().unwrap_or("").to_string();
+
     log::info!("🏷️ GitHub tag: {}", tag_name);
-    
+
     // 移除前缀v和中文字符，只保留数字和点
     let latest_version = tag_name
         .replace("v", "")
@@ -114,20 +108,20 @@ pub async fn check_for_updates(app: AppHandle) -> Result<UpdateInfo, String> {
 fn compare_versions(v1: &str, v2: &str) -> bool {
     let v1_parts: Vec<u32> = v1.split('.').filter_map(|s| s.parse().ok()).collect();
     let v2_parts: Vec<u32> = v2.split('.').filter_map(|s| s.parse().ok()).collect();
-    
+
     let max_len = v1_parts.len().max(v2_parts.len());
-    
+
     for i in 0..max_len {
         let v1_part = v1_parts.get(i).unwrap_or(&0);
         let v2_part = v2_parts.get(i).unwrap_or(&0);
-        
+
         if v1_part > v2_part {
             return true;
         } else if v1_part < v2_part {
             return false;
         }
     }
-    
+
     false
 }
 
@@ -192,7 +186,8 @@ pub async fn restart_app(app: AppHandle) -> Result<(), String> {
 
 /// 获取当前平台对应的下载URL
 fn get_platform_download_url(release: &serde_json::Value) -> Result<String, String> {
-    let assets = release["assets"].as_array()
+    let assets = release["assets"]
+        .as_array()
         .ok_or_else(|| "无法获取release assets".to_string())?;
 
     log::info!("📦 Release assets 总数: {}", assets.len());
@@ -250,13 +245,19 @@ fn get_platform_download_url(release: &serde_json::Value) -> Result<String, Stri
 }
 
 /// 实际的下载和安装实现
-async fn download_and_install_update_impl(app: &AppHandle, update_info: &UpdateInfo) -> Result<(), String> {
+async fn download_and_install_update_impl(
+    app: &AppHandle,
+    update_info: &UpdateInfo,
+) -> Result<(), String> {
     log::info!("🚀 开始自动更新实现");
     log::info!("📋 更新信息: {:?}", update_info);
 
     // 如果下载URL是GitHub页面而不是直接下载链接，引导用户手动下载
     if update_info.download_url.contains("/releases/tag/") {
-        log::info!("🔗 下载URL是release页面，需要手动下载: {}", update_info.download_url);
+        log::info!(
+            "🔗 下载URL是release页面，需要手动下载: {}",
+            update_info.download_url
+        );
         log::info!("💡 这通常意味着没有找到当前平台的预编译版本");
         return Err("请手动下载最新版本".to_string());
     }
@@ -265,11 +266,11 @@ async fn download_and_install_update_impl(app: &AppHandle, update_info: &UpdateI
 
     // 创建临时目录
     let temp_dir = std::env::temp_dir().join("continuum_update");
-    fs::create_dir_all(&temp_dir)
-        .map_err(|e| format!("创建临时目录失败: {}", e))?;
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("创建临时目录失败: {}", e))?;
 
     // 确定文件名
-    let file_name = update_info.download_url
+    let file_name = update_info
+        .download_url
         .split('/')
         .last()
         .unwrap_or("update_file")
@@ -291,13 +292,14 @@ async fn download_and_install_update_impl(app: &AppHandle, update_info: &UpdateI
 
     let total_size = response.content_length();
     let mut downloaded = 0u64;
-    let mut file = fs::File::create(&file_path)
-        .map_err(|e| format!("创建文件失败: {}", e))?;
+    let mut file = fs::File::create(&file_path).map_err(|e| format!("创建文件失败: {}", e))?;
 
     // 下载并报告进度
-    while let Some(chunk) = response.chunk().await
-        .map_err(|e| format!("下载数据失败: {}", e))? {
-
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|e| format!("下载数据失败: {}", e))?
+    {
         file.write_all(&chunk)
             .map_err(|e| format!("写入文件失败: {}", e))?;
 
@@ -347,9 +349,7 @@ async fn install_update(file_path: &PathBuf) -> Result<(), String> {
 
 /// macOS 安装逻辑
 async fn install_macos_update(file_path: &PathBuf) -> Result<(), String> {
-    let file_name = file_path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
     if file_name.ends_with(".tar.gz") {
         // 压缩包文件，需要解压并替换当前可执行文件
@@ -366,9 +366,7 @@ async fn install_macos_update(file_path: &PathBuf) -> Result<(), String> {
 
 /// Windows 安装逻辑
 async fn install_windows_update(file_path: &PathBuf) -> Result<(), String> {
-    let file_name = file_path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
     if file_name.ends_with(".zip") {
         // ZIP 压缩包文件，需要解压并替换当前可执行文件
@@ -383,7 +381,10 @@ async fn install_windows_update(file_path: &PathBuf) -> Result<(), String> {
             .map_err(|e| format!("执行 MSI 安装失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("MSI 安装失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "MSI 安装失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         Ok(())
@@ -396,7 +397,10 @@ async fn install_windows_update(file_path: &PathBuf) -> Result<(), String> {
             .map_err(|e| format!("执行 EXE 安装失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("EXE 安装失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "EXE 安装失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         Ok(())
@@ -407,9 +411,7 @@ async fn install_windows_update(file_path: &PathBuf) -> Result<(), String> {
 
 /// Linux 安装逻辑
 async fn install_linux_update(file_path: &PathBuf) -> Result<(), String> {
-    let file_name = file_path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
     if file_name.ends_with(".tar.gz") {
         // 压缩包文件，需要解压并替换当前可执行文件
@@ -424,7 +426,10 @@ async fn install_linux_update(file_path: &PathBuf) -> Result<(), String> {
             .map_err(|e| format!("执行 DEB 安装失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("DEB 安装失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "DEB 安装失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         Ok(())
@@ -437,7 +442,10 @@ async fn install_linux_update(file_path: &PathBuf) -> Result<(), String> {
             .map_err(|e| format!("执行 RPM 安装失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("RPM 安装失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "RPM 安装失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
 
         Ok(())
@@ -451,26 +459,22 @@ async fn install_from_archive(file_path: &PathBuf) -> Result<(), String> {
     log::info!("📦 开始从压缩包安装更新: {}", file_path.display());
 
     // 获取当前可执行文件的路径
-    let current_exe = std::env::current_exe()
-        .map_err(|e| format!("无法获取当前可执行文件路径: {}", e))?;
+    let current_exe =
+        std::env::current_exe().map_err(|e| format!("无法获取当前可执行文件路径: {}", e))?;
 
     log::info!("📍 当前可执行文件路径: {}", current_exe.display());
 
     // 创建临时解压目录
     let temp_dir = std::env::temp_dir().join("continuum_extract");
     if temp_dir.exists() {
-        fs::remove_dir_all(&temp_dir)
-            .map_err(|e| format!("清理临时目录失败: {}", e))?;
+        fs::remove_dir_all(&temp_dir).map_err(|e| format!("清理临时目录失败: {}", e))?;
     }
-    fs::create_dir_all(&temp_dir)
-        .map_err(|e| format!("创建临时解压目录失败: {}", e))?;
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("创建临时解压目录失败: {}", e))?;
 
     log::info!("📂 临时解压目录: {}", temp_dir.display());
 
     // 根据文件类型解压
-    let file_name = file_path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
+    let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
     if file_name.ends_with(".tar.gz") {
         extract_tar_gz(file_path, &temp_dir)?;
@@ -499,12 +503,20 @@ fn extract_tar_gz(archive_path: &PathBuf, extract_to: &PathBuf) -> Result<(), St
     log::info!("📦 解压 tar.gz 文件");
 
     let output = Command::new("tar")
-        .args(&["-xzf", archive_path.to_str().unwrap(), "-C", extract_to.to_str().unwrap()])
+        .args(&[
+            "-xzf",
+            archive_path.to_str().unwrap(),
+            "-C",
+            extract_to.to_str().unwrap(),
+        ])
         .output()
         .map_err(|e| format!("执行 tar 命令失败: {}", e))?;
 
     if !output.status.success() {
-        return Err(format!("tar 解压失败: {}", String::from_utf8_lossy(&output.stderr)));
+        return Err(format!(
+            "tar 解压失败: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
     }
 
     log::info!("✅ tar.gz 解压完成");
@@ -529,17 +541,28 @@ fn extract_zip(archive_path: &PathBuf, extract_to: &PathBuf) -> Result<(), Strin
             .map_err(|e| format!("执行 PowerShell 命令失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("PowerShell 解压失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "PowerShell 解压失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
     } else {
         // Unix 系统使用 unzip
         let output = Command::new("unzip")
-            .args(&["-o", archive_path.to_str().unwrap(), "-d", extract_to.to_str().unwrap()])
+            .args(&[
+                "-o",
+                archive_path.to_str().unwrap(),
+                "-d",
+                extract_to.to_str().unwrap(),
+            ])
             .output()
             .map_err(|e| format!("执行 unzip 命令失败: {}", e))?;
 
         if !output.status.success() {
-            return Err(format!("unzip 解压失败: {}", String::from_utf8_lossy(&output.stderr)));
+            return Err(format!(
+                "unzip 解压失败: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
         }
     }
 
@@ -553,8 +576,7 @@ fn find_executable_in_dir(dir: &PathBuf) -> Result<PathBuf, String> {
 
     // 递归查找目录中的所有文件
     fn find_files(dir: &PathBuf, files: &mut Vec<PathBuf>) -> Result<(), String> {
-        let entries = fs::read_dir(dir)
-            .map_err(|e| format!("读取目录失败: {}", e))?;
+        let entries = fs::read_dir(dir).map_err(|e| format!("读取目录失败: {}", e))?;
 
         for entry in entries {
             let entry = entry.map_err(|e| format!("读取目录项失败: {}", e))?;
@@ -580,9 +602,12 @@ fn find_executable_in_dir(dir: &PathBuf) -> Result<PathBuf, String> {
             log::info!("📄 检查文件: {} (路径: {})", file_name, file.display());
 
             // 查找名为 "等" 或 "continuum" 的可执行文件
-            if file_name == "等" || file_name == "continuum" ||
-               file_name == "等.exe" || file_name == "continuum.exe" ||
-               file_name.starts_with("continuum") && !file_name.ends_with(".tar.gz") {
+            if file_name == "等"
+                || file_name == "continuum"
+                || file_name == "等.exe"
+                || file_name == "continuum.exe"
+                || file_name.starts_with("continuum") && !file_name.ends_with(".tar.gz")
+            {
                 log::info!("✅ 找到目标可执行文件: {}", file_name);
                 return Ok(file.clone());
             }
@@ -617,8 +642,13 @@ fn find_executable_in_dir(dir: &PathBuf) -> Result<PathBuf, String> {
         }
     }
 
-    Err(format!("在压缩包中未找到可执行文件。找到的文件: {:?}",
-        files.iter().map(|f| f.file_name().and_then(|n| n.to_str()).unwrap_or("?")).collect::<Vec<_>>()))
+    Err(format!(
+        "在压缩包中未找到可执行文件。找到的文件: {:?}",
+        files
+            .iter()
+            .map(|f| f.file_name().and_then(|n| n.to_str()).unwrap_or("?"))
+            .collect::<Vec<_>>()
+    ))
 }
 
 /// 替换当前可执行文件
@@ -631,8 +661,7 @@ fn replace_executable(current_exe: &PathBuf, new_exe: &PathBuf) -> Result<(), St
     let backup_path = create_backup_path(current_exe)?;
 
     log::info!("💾 创建当前文件备份: {}", backup_path.display());
-    fs::copy(current_exe, &backup_path)
-        .map_err(|e| format!("创建备份失败: {}", e))?;
+    fs::copy(current_exe, &backup_path).map_err(|e| format!("创建备份失败: {}", e))?;
 
     // 在 Windows 上，无法直接替换正在运行的可执行文件
     // 需要使用特殊的方法
@@ -662,8 +691,7 @@ del "%~f0"
         current_exe.display()
     );
 
-    fs::write(&script_path, script_content)
-        .map_err(|e| format!("创建更新脚本失败: {}", e))?;
+    fs::write(&script_path, script_content).map_err(|e| format!("创建更新脚本失败: {}", e))?;
 
     log::info!("📝 创建 Windows 更新脚本: {}", script_path.display());
     log::info!("⚠️ Windows 平台需要重启应用以完成更新");
@@ -681,8 +709,7 @@ del "%~f0"
 fn replace_executable_unix(current_exe: &PathBuf, new_exe: &PathBuf) -> Result<(), String> {
     // 复制新文件到临时位置
     let temp_new = current_exe.with_extension("new");
-    fs::copy(new_exe, &temp_new)
-        .map_err(|e| format!("复制新文件失败: {}", e))?;
+    fs::copy(new_exe, &temp_new).map_err(|e| format!("复制新文件失败: {}", e))?;
 
     // 设置执行权限
     #[cfg(unix)]
@@ -692,13 +719,11 @@ fn replace_executable_unix(current_exe: &PathBuf, new_exe: &PathBuf) -> Result<(
             .map_err(|e| format!("获取文件权限失败: {}", e))?
             .permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(&temp_new, perms)
-            .map_err(|e| format!("设置执行权限失败: {}", e))?;
+        fs::set_permissions(&temp_new, perms).map_err(|e| format!("设置执行权限失败: {}", e))?;
     }
 
     // 原子性替换
-    fs::rename(&temp_new, current_exe)
-        .map_err(|e| format!("替换文件失败: {}", e))?;
+    fs::rename(&temp_new, current_exe).map_err(|e| format!("替换文件失败: {}", e))?;
 
     log::info!("✅ Unix 平台文件替换完成");
     Ok(())
@@ -706,15 +731,18 @@ fn replace_executable_unix(current_exe: &PathBuf, new_exe: &PathBuf) -> Result<(
 
 /// 创建智能备份路径
 fn create_backup_path(original_path: &PathBuf) -> Result<PathBuf, String> {
-    let file_stem = original_path.file_stem()
+    let file_stem = original_path
+        .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("backup");
 
-    let extension = original_path.extension()
+    let extension = original_path
+        .extension()
         .and_then(|s| s.to_str())
         .unwrap_or("");
 
-    let parent = original_path.parent()
+    let parent = original_path
+        .parent()
         .ok_or_else(|| "无法获取文件父目录".to_string())?;
 
     // 获取当前版本信息，优先使用应用版本
@@ -735,7 +763,10 @@ fn create_backup_path(original_path: &PathBuf) -> Result<PathBuf, String> {
         let numbered_backup_name = if extension.is_empty() {
             format!("{}.{}.bak.{}", file_stem, current_version, counter)
         } else {
-            format!("{}.{}.bak.{}.{}", file_stem, current_version, counter, extension)
+            format!(
+                "{}.{}.bak.{}.{}",
+                file_stem, current_version, counter, extension
+            )
         };
         backup_path = parent.join(&numbered_backup_name);
         counter += 1;
@@ -789,9 +820,9 @@ fn get_current_app_version() -> String {
 fn extract_version_from_filename(filename: &str) -> Option<String> {
     // 常见的版本模式
     let patterns = [
-        r"v?(\d+\.\d+\.\d+)",  // v1.2.3 或 1.2.3
-        r"v?(\d+\.\d+)",       // v1.2 或 1.2
-        r"(\d+\.\d+\.\d+)",    // 纯数字版本
+        r"v?(\d+\.\d+\.\d+)", // v1.2.3 或 1.2.3
+        r"v?(\d+\.\d+)",      // v1.2 或 1.2
+        r"(\d+\.\d+\.\d+)",   // 纯数字版本
     ];
 
     for pattern in &patterns {

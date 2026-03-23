@@ -32,8 +32,10 @@ interface AppConfig {
 
 interface Props {
   mcpRequest: any
+  pendingCount: number
   showMcpPopup: boolean
   appConfig: AppConfig
+  enableTelegramSync: boolean
   isInitializing: boolean
 }
 
@@ -177,6 +179,7 @@ onUnmounted(() => {
           :show-main-layout="activeView === 'settings'"
           :show-history="activeView === 'history'"
           :always-on-top="props.appConfig.window.alwaysOnTop"
+          :pending-count="props.pendingCount"
           @theme-change="$emit('themeChange', $event)"
           @open-main-layout="togglePopupSettings"
           @open-history="toggleHistory"
@@ -212,6 +215,7 @@ onUnmounted(() => {
         v-show="activeView === 'chat'"
         :request="props.mcpRequest"
         :app-config="props.appConfig"
+        :enable-telegram-sync="props.enableTelegramSync"
         @response="$emit('mcpResponse', $event)"
         @cancel="$emit('mcpCancel')"
         @theme-change="$emit('themeChange', $event)"

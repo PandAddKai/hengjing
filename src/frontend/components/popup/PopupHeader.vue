@@ -7,6 +7,7 @@ interface Props {
   showMainLayout?: boolean
   showHistory?: boolean
   alwaysOnTop?: boolean
+  pendingCount?: number
 }
 
 interface Emits {
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
   showMainLayout: false,
   showHistory: false,
   alwaysOnTop: false,
+  pendingCount: 0,
 })
 
 const emit = defineEmits<Emits>()
@@ -54,6 +56,12 @@ function handleToggleAlwaysOnTop() {
         <h1 class="text-base font-medium text-white">
           恒境 - AI 交互确认助手，助力AI持续交互
         </h1>
+        <span
+          v-if="props.pendingCount > 0"
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500/20 text-primary-400"
+        >
+          +{{ props.pendingCount }} 待处理
+        </span>
       </div>
 
       <!-- 右侧：操作按钮 -->

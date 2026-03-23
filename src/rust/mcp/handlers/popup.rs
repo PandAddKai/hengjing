@@ -1,12 +1,12 @@
 use anyhow::Result;
-use std::process::Command;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
-use crate::mcp::types::PopupRequest;
-use crate::ipc::{IpcRequest, client::IpcClient};
-use crate::web::server::{should_use_web_mode, handle_web_mode};
+use crate::ipc::{client::IpcClient, IpcRequest};
 use crate::log_important;
+use crate::mcp::types::PopupRequest;
+use crate::web::server::{handle_web_mode, should_use_web_mode};
 
 /// 创建 Tauri 弹窗
 ///
@@ -42,8 +42,7 @@ pub async fn create_tauri_popup(request: &PopupRequest) -> Result<String> {
     // IPC 失败且有图形环境，启动新进程（同步阻塞操作，放到 spawn_blocking 中）
     log_important!(info, "启动新的 UI 进程");
     let request_clone = request.clone();
-    tokio::task::spawn_blocking(move || create_new_ui_process(&request_clone))
-        .await?
+    tokio::task::spawn_blocking(move || create_new_ui_process(&request_clone)).await?
 }
 
 /// 启动新的 UI 进程处理请求
